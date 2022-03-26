@@ -102,16 +102,27 @@ set(2.lighting
     1.colors
     2.1.basic_lighting_diffuse
     2.2.basic_lighting_specular
+    2.3.basic_lighting_exercise1
+    2.4.basic_lighting_exercise2
+    2.5.basic_lighting_exercise3
     3.1.materials
+    3.1.materials_light_attr
+    3.1.materials_light_color
     3.2.materials_exercise1
+    4.0.lighting_maps
     4.1.lighting_maps_diffuse_map
     4.2.lighting_maps_specular_map
-    4.4.lighting_maps_exercise4
+    4.4.lighting_maps_exercise3
+    4.5.lighting_maps_exercise4
     5.1.light_casters_directional
     5.2.light_casters_point
     5.3.light_casters_spot
     5.4.light_casters_spot_soft
-    6.multiple_lights
+    6.1.multiple_lights
+    6.2.multiple_lights_desert
+    6.3.multiple_lights_factory
+    6.4.multiple_lights_horror
+    6.5.multiple_lights_biochemical_lab
 )
 
 set(3.model_loading

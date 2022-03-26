@@ -1,3 +1,4 @@
+```cpp
 // == ==============================================================================================
 //       DESERT
 // == ==============================================================================================
@@ -237,4 +238,5 @@ glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.constant"), 
 glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.linear"), 0.07);
 glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.quadratic"), 0.017);	
 glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.cutOff"), glm::cos(glm::radians(7.0f)));
-glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(10.0f)));	
+glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(10.0f)));
+```
