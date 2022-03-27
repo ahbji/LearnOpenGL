@@ -229,17 +229,17 @@ int main()
         lightingShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
         // point light 1
         lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-        lightingShader.setVec3("pointLights[2].ambient", pointLightColors[0].x * 0.1,  pointLightColors[0].y * 0.1,  pointLightColors[0].z * 0.1);
-        lightingShader.setVec3("pointLights[2].diffuse", pointLightColors[0].x, pointLightColors[0].y,  pointLightColors[0].z); 
-        lightingShader.setVec3("pointLights[2].specular", pointLightColors[0].x,  pointLightColors[0].y,  pointLightColors[0].z);
+        lightingShader.setVec3("pointLights[0].ambient", pointLightColors[0].x * 0.1,  pointLightColors[0].y * 0.1,  pointLightColors[0].z * 0.1);
+        lightingShader.setVec3("pointLights[0].diffuse", pointLightColors[0].x, pointLightColors[0].y,  pointLightColors[0].z); 
+        lightingShader.setVec3("pointLights[0].specular", pointLightColors[0].x,  pointLightColors[0].y,  pointLightColors[0].z);
         lightingShader.setFloat("pointLights[0].constant", 1.0f);
         lightingShader.setFloat("pointLights[0].linear", 0.07);
         lightingShader.setFloat("pointLights[0].quadratic", 0.017);	
         // point light 2
         lightingShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-        lightingShader.setVec3("pointLights[2].ambient", pointLightColors[1].x * 0.1,  pointLightColors[1].y * 0.1,  pointLightColors[1].z * 0.1);
-        lightingShader.setVec3("pointLights[2].diffuse", pointLightColors[1].x, pointLightColors[1].y,  pointLightColors[1].z); 
-        lightingShader.setVec3("pointLights[2].specular", pointLightColors[1].x,  pointLightColors[1].y,  pointLightColors[1].z);
+        lightingShader.setVec3("pointLights[1].ambient", pointLightColors[1].x * 0.1,  pointLightColors[1].y * 0.1,  pointLightColors[1].z * 0.1);
+        lightingShader.setVec3("pointLights[1].diffuse", pointLightColors[1].x, pointLightColors[1].y,  pointLightColors[1].z); 
+        lightingShader.setVec3("pointLights[1].specular", pointLightColors[1].x,  pointLightColors[1].y,  pointLightColors[1].z);
         lightingShader.setFloat("pointLights[1].constant", 1.0f);
         lightingShader.setFloat("pointLights[1].linear", 0.07);
         lightingShader.setFloat("pointLights[1].quadratic", 0.017);	
