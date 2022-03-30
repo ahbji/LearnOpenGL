@@ -3,4 +3,5 @@ bin/
 build/
 out/
 xcode/
+VisualStudio/
 .DS_Store

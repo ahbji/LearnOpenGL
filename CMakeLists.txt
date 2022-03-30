@@ -149,6 +149,7 @@ set(4.advanced_opengl
     6.2.cubemaps_environment_mapping
     6.2.cubemaps_environment_mapping_reflection
     6.2.cubemaps_environment_mapping_refraction
+    6.3.cubemaps_environment_mapping_exercise
     8.advanced_glsl_ubo
     9.1.geometry_shader_houses
     9.2.geometry_shader_exploding
