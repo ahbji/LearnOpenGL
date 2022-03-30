@@ -33,6 +33,24 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+Shader* shader = nullptr;
+
+vector<glm::vec3> windows;
+
+// cube VAO
+unsigned int cubeVAO, cubeVBO;
+// transparent VAO
+unsigned int transparentVAO, transparentVBO;
+// plane VAO
+unsigned int planeVAO, planeVBO;
+
+unsigned int cubeTexture , floorTexture , transparentTexture;
+
+void setupVertices(void);
+void init(void);
+void render(void);
+void clear(void);
+
 int main()
 {
     // glfw: initialize and configure
@@ -77,10 +95,127 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    init();
+
+    // render loop
+    // -----------
+    while (!glfwWindowShouldClose(window))
+    {
+        // input
+        // -----
+        processInput(window);
+
+        render();
+
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        // -------------------------------------------------------------------------------
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    clear();
+
+    glfwTerminate();
+    return 0;
+}
+
+void clear(void) {
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &planeVAO);
+    glDeleteVertexArrays(1, &transparentVAO);
+    glDeleteBuffers(1, &cubeVBO);
+    glDeleteBuffers(1, &planeVBO);
+    glDeleteBuffers(1, &transparentVBO);
+}
+
+void render(void) {
+    // per-frame time logic
+    // --------------------
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    // render
+    // ------
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // draw objects
+    shader->use();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
+    shader->setMat4("projection", projection);
+    shader->setMat4("view", view);
+    // cubes
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, cubeTexture);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    shader->setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    shader->setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    // floor
+    glBindVertexArray(planeVAO);
+    glBindTexture(GL_TEXTURE_2D, floorTexture);
+    model = glm::mat4(1.0f);
+    shader->setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    
+    // windows (from furthest to nearest)
+    // sort the transparent windows before rendering
+    // ---------------------------------------------
+    std::map<float, glm::vec3> sorted;
+    for (unsigned int i = 0; i < windows.size(); i++)
+    {
+        float distance = glm::length(camera.Position - windows[i]);
+        sorted[distance] = windows[i];
+    }
+    glBindVertexArray(transparentVAO);
+    glBindTexture(GL_TEXTURE_2D, transparentTexture);
+    for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+    {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, it->second);
+        shader->setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+}
+
+void init(void) {
+
+    setupVertices();
+
+    // load textures
+    // -------------
+    cubeTexture = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
+    floorTexture = loadTexture(FileSystem::getPath("resources/textures/metal.png").c_str());
+    transparentTexture = loadTexture(FileSystem::getPath("resources/textures/window.png").c_str());
+
+    // transparent vegetation locations
+    // --------------------------------
+    windows.push_back(glm::vec3(-1.5f,  0.0f, -0.48f));
+    windows.push_back(glm::vec3( 1.5f,  0.0f,  0.51f));
+    windows.push_back(glm::vec3( 0.0f,  0.0f,  0.7f));
+    windows.push_back(glm::vec3(-0.3f,  0.0f, -2.3f));
+    windows.push_back(glm::vec3( 0.5f,  0.0f, -0.6f));
+
     // build and compile shaders
     // -------------------------
-    Shader shader("3.2.blending.vs", "3.2.blending.fs");
+    shader = new Shader("3.2.blending.vs", "3.2.blending.fs");
+    // shader configuration
+    // --------------------
+    shader->use();
+    shader->setInt("texture1", 0); 
+}
 
+void setupVertices(void) {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float cubeVertices[] = {
@@ -147,8 +282,7 @@ int main()
         1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
         1.0f,  0.5f,  0.0f,  1.0f,  0.0f
     };
-    // cube VAO
-    unsigned int cubeVAO, cubeVBO;
+
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
     glBindVertexArray(cubeVAO);
@@ -158,8 +292,7 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    // plane VAO
-    unsigned int planeVAO, planeVBO;
+
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
     glBindVertexArray(planeVAO);
@@ -169,8 +302,7 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    // transparent VAO
-    unsigned int transparentVAO, transparentVBO;
+
     glGenVertexArrays(1, &transparentVAO);
     glGenBuffers(1, &transparentVBO);
     glBindVertexArray(transparentVAO);
@@ -181,108 +313,6 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
-
-    // load textures
-    // -------------
-    unsigned int cubeTexture = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
-    unsigned int floorTexture = loadTexture(FileSystem::getPath("resources/textures/metal.png").c_str());
-    unsigned int transparentTexture = loadTexture(FileSystem::getPath("resources/textures/window.png").c_str());
-
-    // transparent window locations
-    // --------------------------------
-    vector<glm::vec3> windows
-    {
-        glm::vec3(-1.5f, 0.0f, -0.48f),
-        glm::vec3( 1.5f, 0.0f, 0.51f),
-        glm::vec3( 0.0f, 0.0f, 0.7f),
-        glm::vec3(-0.3f, 0.0f, -2.3f),
-        glm::vec3( 0.5f, 0.0f, -0.6f)
-    };
-
-    // shader configuration
-    // --------------------
-    shader.use();
-    shader.setInt("texture1", 0);
-
-    // render loop
-    // -----------
-    while (!glfwWindowShouldClose(window))
-    {
-        // per-frame time logic
-        // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
-        // input
-        // -----
-        processInput(window);
-
-        // sort the transparent windows before rendering
-        // ---------------------------------------------
-        std::map<float, glm::vec3> sorted;
-        for (unsigned int i = 0; i < windows.size(); i++)
-        {
-            float distance = glm::length(camera.Position - windows[i]);
-            sorted[distance] = windows[i];
-        }
-
-        // render
-        // ------
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // draw objects
-        shader.use();
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", view);
-        // cubes
-        glBindVertexArray(cubeVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        model = glm::mat4(1.0f);
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        // windows (from furthest to nearest)
-        glBindVertexArray(transparentVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteVertexArrays(1, &planeVAO);
-    glDeleteBuffers(1, &cubeVBO);
-    glDeleteBuffers(1, &planeVBO);
-
-    glfwTerminate();
-    return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly

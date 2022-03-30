@@ -31,6 +31,17 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+void setupVertices(void);
+void init(void);
+void render(void);
+void clear(void);
+
+#define NR_POINT_LIGHTS 2
+
+Model* ourModel;
+Shader* shader;
+glm::vec3 pointLightPositions[NR_POINT_LIGHTS];
+
 int main()
 {
     // glfw: initialize and configure
@@ -76,53 +87,20 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
-    // build and compile shaders
-    // -------------------------
-    Shader ourShader("1.model_loading.vs", "1.model_loading.fs");
+    init();
 
-    // load models
-    // -----------
-    Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-
-    
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
+    while(!glfwWindowShouldClose(window))
     {
-        // per-frame time logic
-        // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
         // input
         // -----
         processInput(window);
 
-        // render
-        // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // don't forget to enable shader before setting uniforms
-        ourShader.use();
-
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
-
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
-
+        render();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -130,10 +108,47 @@ int main()
         glfwPollEvents();
     }
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
+}
+
+void render(void) {
+    // per-frame time logic
+    // --------------------
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    // render
+    // ------
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // don't forget to enable shader before setting uniforms
+    shader->use();
+
+    // view/projection transformations
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    shader->setMat4("projection", projection);
+    shader->setMat4("view", view);
+
+    // Draw the loaded model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
+    shader->setMat4("model", model);
+    ourModel->Draw(*shader);
+}
+
+void init(void) {
+    // build and compile shaders
+    // -------------------------
+    shader = new Shader("1.model_loading.vs", "1.model_loading.fs");
+
+    // load models
+    // -----------
+    ourModel = new Model(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly

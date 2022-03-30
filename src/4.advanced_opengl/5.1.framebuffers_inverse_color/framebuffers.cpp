@@ -109,6 +109,7 @@ int main()
 
         render();
 
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -151,9 +152,9 @@ void render(void) {
 
     // draw objects
     shader->use();
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
     shader->setMat4("projection", projection);
     shader->setMat4("view", view);
     // cubes
@@ -195,7 +196,7 @@ void init(void) {
     // build and compile shaders
     // -------------------------
     shader = new Shader("5.1.framebuffers.vs", "5.1.framebuffers.fs");
-    screenShader = new Shader("5.1.framebuffers_screen.vs", "5.1.framebuffers_screen.fs");
+    screenShader = new Shader("5.1.framebuffers_inverse_color.vs", "5.1.framebuffers_inverse_color.fs");
     // shader configuration
     // --------------------
     shader->use();
