@@ -127,18 +127,28 @@ set(2.lighting
 
 set(3.model_loading
     1.model_loading
+    2.model_loading_exercise
 )
 
 set(4.advanced_opengl
     1.1.depth_testing
+    1.1.depth_testing_GL_LESS
     1.2.depth_testing_view
+    1.2.depth_testing_view_non-linearity
     2.stencil_testing
     3.1.blending_discard
     3.2.blending_sort
     5.1.framebuffers
+    5.1.framebuffers_inverse_color
+    5.1.framebuffers_grey
+    5.1.framebuffers_sharpen
+    5.1.framebuffers_blur
+    5.1.framebuffers_edge-detection
     5.2.framebuffers_exercise1
     6.1.cubemaps_skybox
     6.2.cubemaps_environment_mapping
+    6.2.cubemaps_environment_mapping_reflection
+    6.2.cubemaps_environment_mapping_refraction
     8.advanced_glsl_ubo
     9.1.geometry_shader_houses
     9.2.geometry_shader_exploding
