@@ -80,7 +80,7 @@ int main()
 
     // load models
     // -----------
-    Model nanosuit(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj")); 
+    Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj")); 
 
     // render loop
     // -----------
@@ -114,7 +114,7 @@ int main()
         shader.setFloat("time", static_cast<float>(glfwGetTime()));
 
         // draw model
-        nanosuit.Draw(shader);
+        backpack.Draw(shader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

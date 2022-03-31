@@ -79,6 +79,7 @@ set(1.getting_started
     2.3.hello_triangle_exercise1
     2.4.hello_triangle_exercise2
     2.5.hello_triangle_exercise3
+    3.0.shader_point
     3.1.shaders_uniform
     3.2.shaders_interpolation
     3.3.shaders_class
@@ -131,29 +132,30 @@ set(3.model_loading
 )
 
 set(4.advanced_opengl
-    1.1.depth_testing
-    1.1.depth_testing_GL_LESS
-    1.2.depth_testing_view
-    1.2.depth_testing_view_non-linearity
-    2.stencil_testing
-    3.1.blending_discard
-    3.2.blending_sort
-    5.1.framebuffers
-    5.1.framebuffers_inverse_color
-    5.1.framebuffers_grey
-    5.1.framebuffers_sharpen
-    5.1.framebuffers_blur
-    5.1.framebuffers_edge-detection
-    5.2.framebuffers_exercise1
-    6.1.cubemaps_skybox
-    6.2.cubemaps_environment_mapping
-    6.2.cubemaps_environment_mapping_reflection
-    6.2.cubemaps_environment_mapping_refraction
-    6.3.cubemaps_environment_mapping_exercise
-    8.advanced_glsl_ubo
-    9.1.geometry_shader_houses
-    9.2.geometry_shader_exploding
-    9.3.geometry_shader_normals
+    01.1.depth_testing
+    01.1.depth_testing_GL_LESS
+    01.2.depth_testing_view
+    01.2.depth_testing_view_non-linearity
+    02.stencil_testing
+    03.1.blending_discard
+    03.2.blending_sort
+    05.1.framebuffers
+    05.1.framebuffers_inverse_color
+    05.1.framebuffers_grey
+    05.1.framebuffers_sharpen
+    05.1.framebuffers_blur
+    05.1.framebuffers_edge-detection
+    05.2.framebuffers_exercise1
+    06.1.cubemaps_skybox
+    06.2.cubemaps_environment_mapping
+    06.2.cubemaps_environment_mapping_reflection
+    06.2.cubemaps_environment_mapping_refraction
+    06.3.cubemaps_environment_mapping_exercise
+    08.advanced_glsl_ubo
+    09.0.geometry_shader
+    09.1.geometry_shader_houses
+    09.2.geometry_shader_exploding
+    09.3.geometry_shader_normals
     10.1.instancing_quads
     10.2.asteroids
     10.3.asteroids_instanced
