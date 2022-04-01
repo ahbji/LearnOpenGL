@@ -133,23 +133,7 @@ void clear(void) {
     glDeleteBuffers(1, &quadVBO);
 }
 
-void render(void) {
-    // per-frame time logic
-    // --------------------
-    float currentFrame = static_cast<float>(glfwGetTime());
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
-
-    // render
-    // ------
-    // bind to framebuffer and draw scene as we normally would to color texture 
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
-
-    // make sure we clear the framebuffer's content
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+void drawScene(void) {
     // draw objects
     shader->use();
     glm::mat4 model = glm::mat4(1.0f);
@@ -179,16 +163,14 @@ void render(void) {
     shader->setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    
-    // second render pass: draw as normal
-    // ----------------------------------
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void drawMirror() {
+    // now draw the mirror quad with screen texture
+    // --------------------------------------------
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = camera.GetViewMatrix();
 
-    model = glm::mat4(1.0f);
-    view = camera.GetViewMatrix();
     shader->setMat4("view", view);
     // cubes
     glBindVertexArray(cubeVAO);
@@ -207,12 +189,39 @@ void render(void) {
     shader->setMat4("model", glm::mat4(1.0f));
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    // now draw the mirror quad with screen texture
-    // --------------------------------------------
-    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+}
+
+void render(void) {
+    // per-frame time logic
+    // --------------------
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    // render
+    // ------
+    // bind to framebuffer and draw scene as we normally would to color texture 
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+    // make sure we clear the framebuffer's content
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    drawScene();
+    
+    // second render pass: draw as normal
+    // ----------------------------------
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // clear all relevant buffers
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    drawMirror();
 
     screenShader->use();
     glBindVertexArray(quadVAO);
+    glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -259,7 +268,7 @@ void setupFrameBuffer(void) {
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT); // use a single renderbuffer object for both a depth AND stencil buffer.
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
-                                                                                                  // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
+    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
