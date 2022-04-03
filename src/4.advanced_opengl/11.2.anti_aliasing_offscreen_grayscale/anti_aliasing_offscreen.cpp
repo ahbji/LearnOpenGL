@@ -53,8 +53,8 @@ Shader* shader = nullptr;
 Shader* screenShader = nullptr;
 
 void setupFrameBuffer(void) {
-    // framebuffer configuration
-    // -------------------------
+    // configure MSAA framebuffer
+    // --------------------------
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
@@ -64,7 +64,7 @@ void setupFrameBuffer(void) {
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
-
+    
     // create a (also multisampled) renderbuffer object for depth and stencil attachments
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -78,7 +78,7 @@ void setupFrameBuffer(void) {
     // configure second post-processing framebuffer
     glGenFramebuffers(1, &intermediateFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, intermediateFBO);
-
+    
     // create a color attachment texture
     glGenTextures(1, &screenTexture);
     glBindTexture(GL_TEXTURE_2D, screenTexture);

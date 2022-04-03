@@ -157,10 +157,13 @@ set(4.advanced_opengl
     09.2.geometry_shader_exploding
     09.3.geometry_shader_normals
     10.1.instancing_quads
+    10.1.instancing_quads_1
     10.2.asteroids
     10.3.asteroids_instanced
     11.1.anti_aliasing_msaa
     11.2.anti_aliasing_offscreen
+    11.2.anti_aliasing_offscreen_grayscale
+    11.3.anti_aliasing_offscreen_exercise1
 )
 
 set(5.advanced_lighting
