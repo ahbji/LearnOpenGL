@@ -2,3 +2,9 @@
 bin/
 build/
 out/
+xcode/
+VisualStudio/
+.vs/
+.DS_Store
+CMakeSettings.json
+.vscode/settings.json
