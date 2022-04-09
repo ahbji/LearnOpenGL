@@ -96,6 +96,7 @@ set(1.getting_started
     7.2.camera_keyboard_dt
     7.3.camera_mouse_zoom
     7.4.camera_class
+    7.5.camera_exercise1
 )
 
 set(2.lighting
@@ -194,6 +195,9 @@ set(LIBS ${LIBS} STB_IMAGE)
 add_library(GLAD "src/glad.c")
 set(LIBS ${LIBS} GLAD)
 
+add_library(CUBE "src/cube.cpp")
+set(LIBS ${LIBS} CUBE)
+
 macro(makeLink src dest target)
   add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")
 endmacro()
@@ -205,6 +209,7 @@ function(create_project_from_sources chapter demo)
             "src/${chapter}/${demo}/*.vs"
             "src/${chapter}/${demo}/*.fs"
             "src/${chapter}/${demo}/*.gs"
+            "src/${chapter}/${demo}/*.glsl"
     )
 	if (demo STREQUAL "")
 		SET(replaced "")
@@ -235,6 +240,7 @@ function(create_project_from_sources chapter demo)
              # "src/${chapter}/${demo}/*.frag"
              "src/${chapter}/${demo}/*.fs"
              "src/${chapter}/${demo}/*.gs"
+             "src/${chapter}/${demo}/*.glsl"
     )
     foreach(SHADER ${SHADERS})
         if(WIN32)
