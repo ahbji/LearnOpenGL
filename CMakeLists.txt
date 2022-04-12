@@ -103,16 +103,23 @@ set(2.lighting
     1.colors
     2.1.basic_lighting_diffuse
     2.2.basic_lighting_specular
+    2.basic_lighting_refactor
     3.1.materials
     3.2.materials_exercise1
+    3.materials_refactor
     4.1.lighting_maps_diffuse_map
     4.2.lighting_maps_specular_map
     4.4.lighting_maps_exercise4
+    4.lighting_maps_refactor
     5.1.light_casters_directional
+    5.1.1.light_casters_directional_refactor
     5.2.light_casters_point
+    5.2.1.light_casters_point_refactor
     5.3.light_casters_spot
     5.4.light_casters_spot_soft
+    5.4.1.light_casters_spot_refactor
     6.multiple_lights
+    6.1.multiple_lights_refactor
 )
 
 set(3.model_loading
