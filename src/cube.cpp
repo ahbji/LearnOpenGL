@@ -1,6 +1,10 @@
 #include <glad/glad.h>
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <cube.h>
 
 Cube::Cube(const char* vertexPath, const char* fragmentPath)
@@ -164,7 +168,7 @@ void Cube::bindTexture(GLenum textureUnit, unsigned int texture) {
     glBindTexture(GL_TEXTURE_2D, texture);
 }
 
-void Cube::drawCube(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+void Cube::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
     // activate shader
     shader->use();
@@ -175,6 +179,29 @@ void Cube::drawCube(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
     // render boxes
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+}
+
+void Cube::drawWithHalo(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+{
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
+    draw(model, view, projection);
+}
+
+void Cube::drawHalo(glm::mat4 model, glm::vec3 scale, glm::mat4 view, glm::mat4 projection)
+{
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00);
+
+    shader->setBool("halo", true);
+    draw(glm::scale(model, scale), view, projection);
+    
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+    shader->setBool("halo", false);
 }
 
 void Cube::setupMaterial(float shininess)
