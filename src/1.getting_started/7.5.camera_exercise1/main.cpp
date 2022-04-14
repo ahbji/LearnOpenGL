@@ -58,6 +58,6 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        cube->drawCube(model, view, projection);
+        cube->draw(model, view, projection);
     }
 }

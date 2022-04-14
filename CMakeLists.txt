@@ -129,8 +129,11 @@ set(3.model_loading
 
 set(4.advanced_opengl
     1.1.depth_testing
+    1.1.1.depth_testing_refactor
     1.2.depth_testing_view
+    1.2.1.depth_testing_view_refactor
     2.stencil_testing
+    2.1.stencil_testing_refactor
     3.1.blending_discard
     3.2.blending_sort
     5.1.framebuffers
@@ -205,6 +208,9 @@ set(LIBS ${LIBS} GLAD)
 
 add_library(CUBE "src/cube.cpp")
 set(LIBS ${LIBS} CUBE)
+
+add_library(PLANE "src/plane.cpp")
+set(LIBS ${LIBS} PLANE)
 
 macro(makeLink src dest target)
   add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")

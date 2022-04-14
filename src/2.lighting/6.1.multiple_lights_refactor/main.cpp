@@ -138,7 +138,7 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        materialCube->drawCube(model, view, projection);
+        materialCube->draw(model, view, projection);
     }
 
     for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
@@ -146,11 +146,11 @@ void loopFunc()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[i]);
         model = glm::scale(model, glm::vec3(0.2f));
-        lightSrcCube->drawCube(model, view, projection);
+        lightSrcCube->draw(model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, dirLightPos);
     model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-    lightSrcCube->drawCube(model, view, projection);
+    lightSrcCube->draw(model, view, projection);
 }
