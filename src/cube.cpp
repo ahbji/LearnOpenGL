@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <stb_image.h>
 
-#include <learnopengl/filesystem.h>
 #include <cube.h>
 
 Cube::Cube(const char* vertexPath, const char* fragmentPath)
@@ -82,7 +81,7 @@ void Cube::setupVertices()
 }
 
 void Cube::initTexture(
-    const std::string& texturePath, 
+    const char* texturePath,
     unsigned int* texture, 
     const std::string& textureUnitVariableName ,
     unsigned int textureUnitID,
@@ -101,7 +100,7 @@ void Cube::initTexture(
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(FileSystem::getPath(texturePath).c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -118,14 +117,14 @@ void Cube::initTexture(
     shader->setInt(textureUnitVariableName, textureUnitID);
 }
 
-unsigned int Cube::loadMipMap(const std::string& texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
+unsigned int Cube::loadMipMap(const char* texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
     
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load(FileSystem::getPath(texturePath).c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
     if (data)
     {
         GLenum format;
@@ -152,7 +151,7 @@ unsigned int Cube::loadMipMap(const std::string& texturePath, const std::string&
     }
     else
     {
-        std::cout << "Texture failed to load at path: " << FileSystem::getPath(texturePath).c_str() << std::endl;
+        std::cout << "Texture failed to load at path: " << texturePath << std::endl;
         stbi_image_free(data);
     }
     return textureID;

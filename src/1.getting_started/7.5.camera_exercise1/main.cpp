@@ -1,6 +1,8 @@
 #include <game_window.h>
 #include <cube.h>
 
+#include <learnopengl/filesystem.h>
+
 Cube * cube;
 unsigned int texture0, texture1;
 void loopFunc();
@@ -28,8 +30,8 @@ int main()
 
     cube = new Cube("7.6.cubeVertex.glsl", "7.6.cubeFrag.glsl");
     cube->setupVertices();
-    cube->initTexture("resources/textures/container.jpg", &texture0, "texture0", 0, GL_RGB);
-    cube->initTexture("resources/textures/awesomeface.png", &texture1, "texture1", 1, GL_RGBA);
+    cube->initTexture(FileSystem::getPath("resources/textures/container.jpg").c_str(), &texture0, "texture0", 0, GL_RGB);
+    cube->initTexture(FileSystem::getPath("resources/textures/awesomeface.png").c_str(), &texture1, "texture1", 1, GL_RGBA);
 
     mainLoop(loopFunc);
 }

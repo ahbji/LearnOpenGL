@@ -1,6 +1,8 @@
 #include <game_window.h>
 #include <cube.h>
 
+#include <learnopengl/filesystem.h>
+
 Cube * materialCube;
 unsigned int diffuseMap, specularMap;
 
@@ -35,8 +37,8 @@ int main()
 
     materialCube = new Cube("light_casters_point_cube_vertex.glsl", "light_casters_point_cube_frag.glsl");
     materialCube->setupVertices();
-    diffuseMap = materialCube->loadMipMap("resources/textures/container2.png", "material.diffuse", Cube::DIFFUSE);
-    specularMap = materialCube->loadMipMap("resources/textures/container2_specular.png", "material.specular", Cube::SPECULAR);
+    diffuseMap = materialCube->loadMipMap(FileSystem::getPath("resources/textures/container2.png").c_str(), "material.diffuse", Cube::DIFFUSE);
+    specularMap = materialCube->loadMipMap(FileSystem::getPath("resources/textures/container2_specular.png").c_str(), "material.specular", Cube::SPECULAR);
 
     lightSrcCube = new Cube("lightSrc_cube_vertex.glsl", "lightSrc_cube_frag.glsl");
     lightSrcCube->setupVertices();
