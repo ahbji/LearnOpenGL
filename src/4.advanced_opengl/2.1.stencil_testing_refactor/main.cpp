@@ -83,41 +83,42 @@ void loopFunc()
     cube->bindTexture(GL_TEXTURE0, cubeTexture);
     cube->draw(fixDepthFighting(model, offset), view, projection);
 
+<<<<<<< HEAD
+
+    // 绘制 halo cube
+    cube->bindTexture(GL_TEXTURE0, cubeTexture);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(4.0f, 0.0f, 1.0f));
+    cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(4.0f, 0.0f, 1.0f));
+    cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
 
     // // 绘制 halo cube
     // cube->bindTexture(GL_TEXTURE0, cubeTexture);
     // model = glm::mat4(1.0f);
     // model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
     // cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    // cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(4.0f, 0.0f, 1.0f));
-    // cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
-
-    // model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
     // cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
     // model = glm::mat4(1.0f);
     // model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    // cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
     // cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
     // model = glm::mat4(1.0f);
     // model = glm::translate(model, glm::vec3(4.0f, 0.0f, 1.0f));
+    // cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
     // cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
-
-    // // 绘制 halo cube
-    cube->bindTexture(GL_TEXTURE0, cubeTexture);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
-    cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
-    cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(4.0f, 0.0f, 1.0f));
-    cube->drawWithHalo(fixDepthFighting(model, offset), view, projection);
-    cube->drawHalo(fixDepthFighting(model, offset), scale, view, projection);
 }

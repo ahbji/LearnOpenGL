@@ -184,7 +184,10 @@ void Cube::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 
 void Cube::drawWithHalo(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
+<<<<<<< HEAD
     // 设置箱子部分的模板值为1
+=======
+>>>>>>> dff9be81553c5879f73f2237c08457c2d985c10b
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
 
