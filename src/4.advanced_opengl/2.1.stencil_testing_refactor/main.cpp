@@ -83,8 +83,6 @@ void loopFunc()
     cube->bindTexture(GL_TEXTURE0, cubeTexture);
     cube->draw(fixDepthFighting(model, offset), view, projection);
 
-<<<<<<< HEAD
-
     // 绘制 halo cube
     cube->bindTexture(GL_TEXTURE0, cubeTexture);
     model = glm::mat4(1.0f);
