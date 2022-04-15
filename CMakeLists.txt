@@ -136,6 +136,7 @@ set(4.advanced_opengl
     2.1.stencil_testing_refactor
     3.1.blending_discard
     3.2.blending_sort
+    3.2.1.blending_refactor
     5.1.framebuffers
     5.2.framebuffers_exercise1
     6.1.cubemaps_skybox
@@ -209,7 +210,10 @@ set(LIBS ${LIBS} GLAD)
 add_library(CUBE "src/cube.cpp")
 set(LIBS ${LIBS} CUBE)
 
-add_library(PLANE "src/plane.cpp")
+add_library(PLANE 
+    "src/plane.cpp"
+    "src/vertical_face.cpp"
+)
 set(LIBS ${LIBS} PLANE)
 
 macro(makeLink src dest target)
