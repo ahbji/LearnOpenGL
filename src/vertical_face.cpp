@@ -19,13 +19,13 @@ void TransparentVerticalFace::setupVertices()
     // ------------------------------------------------------------------
     float vertices[] = {
         // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f, // top-left
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f, // bottom-left
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f, // bottom-right
 
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f, // top-left
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f, // bottom-right
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f  // top-right
     };
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
