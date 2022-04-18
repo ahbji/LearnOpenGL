@@ -41,7 +41,7 @@ void Plane::setupVertices()
     // texture coord attribute
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
-   
+    glBindVertexArray(0);
 }
 
 unsigned int Plane::loadMipMap(const char* texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
@@ -102,4 +102,14 @@ void Plane::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
     // render boxes
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
+Plane::~Plane()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shader->ID);
+    delete shader;
+    shader = nullptr;
 }

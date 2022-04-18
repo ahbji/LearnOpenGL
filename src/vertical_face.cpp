@@ -102,3 +102,12 @@ void TransparentVerticalFace::draw(glm::mat4 model, glm::mat4 view, glm::mat4 pr
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+
+TransparentVerticalFace::~TransparentVerticalFace()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shader->ID);
+    delete shader;
+    shader = nullptr;
+}

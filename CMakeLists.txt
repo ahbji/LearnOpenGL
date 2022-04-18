@@ -139,6 +139,7 @@ set(4.advanced_opengl
     3.2.1.blending_refactor
     4.face_culling_refactor
     5.1.framebuffers
+    5.1.1.framebuffers_refactor
     5.2.framebuffers_exercise1
     6.1.cubemaps_skybox
     6.2.cubemaps_environment_mapping
@@ -216,6 +217,11 @@ add_library(PLANE
     "src/vertical_face.cpp"
 )
 set(LIBS ${LIBS} PLANE)
+
+add_library(FRAMEBUFFER 
+    "src/framebuffer.cpp"
+)
+set(LIBS ${LIBS} FRAMEBUFFER)
 
 macro(makeLink src dest target)
   add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")

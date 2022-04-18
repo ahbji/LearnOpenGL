@@ -88,6 +88,7 @@ void Cube::setupVertices()
     // texture coord attribute
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
+    glBindVertexArray(0);
 }
 
 void Cube::initTexture(
@@ -295,6 +296,9 @@ void Cube::initSpotLight(
 
 Cube::~Cube()
 {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shader->ID);
     delete shader;
     shader = nullptr;
 }
