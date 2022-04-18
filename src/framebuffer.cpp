@@ -38,6 +38,36 @@ void FrameBuffer::setupVertices()
     glBindVertexArray(0);
 }
 
+void FrameBuffer::setupVerticesSmallWindow()
+{
+    float vertices[] = {
+        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -0.3f,  1.0f,  0.0f, 1.0f,
+        -0.3f,  0.7f,  0.0f, 0.0f,
+         0.3f,  0.7f,  1.0f, 0.0f,
+
+        -0.3f,  1.0f,  0.0f, 1.0f,
+         0.3f,  0.7f,  1.0f, 0.0f,
+         0.3f,  1.0f,  1.0f, 1.0f
+    };
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // position attribute
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    // texture coord attribute
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glBindVertexArray(0);
+}
+
 void FrameBuffer::initFrameBuffer(unsigned int width, unsigned int height)
 {
     shader->use();
@@ -89,12 +119,40 @@ void FrameBuffer::draw(bool polygonMode)
     }
     // clear all relevant buffers
     // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader->use();
     glBindVertexArray(VAO);
 
+    // use the color attachment texture as the texture of the quad plane
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
+void FrameBuffer::draw(bool polygonMode, void (*anotherDraw)())
+{
+    // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // 线框模式
+    if (polygonMode)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    // clear all relevant buffers
+    // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (anotherDraw != nullptr)
+    {
+        anotherDraw();
+    }
+
+    shader->use();
+    glBindVertexArray(VAO);
+    // Draw mirror
     // use the color attachment texture as the texture of the quad plane
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
     glDrawArrays(GL_TRIANGLES, 0, 6);

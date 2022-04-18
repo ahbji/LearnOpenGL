@@ -9,9 +9,11 @@ public:
     
     FrameBuffer(const char* vertexPath, const char* fragmentPath);
     void setupVertices();
+    void setupVerticesSmallWindow();
     void initFrameBuffer(unsigned int width, unsigned int height);
     void bindFrameBuffer();
     void draw(bool polygonMode);
+    void draw(bool polygonMode, void (*anotherDraw)());
 
     ~FrameBuffer();
 private:
