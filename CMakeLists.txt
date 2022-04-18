@@ -143,7 +143,7 @@ set(4.advanced_opengl
     5.2.framebuffers_exercise1
     5.2.1.framebuffers_exercise1_refactor
     5.3.1.framebuffers_inverse_color
-    5.4.1.framebuffers_gery
+    5.4.1.framebuffers_grey
     5.5.1.framebuffers_sharpen
     5.6.1.framebuffers_blur
     5.7.1.framebuffers_edge-detection

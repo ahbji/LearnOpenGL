@@ -13,13 +13,13 @@ void FrameBuffer::setupVertices()
     float vertices[] = {
         // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
         // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f,  0.0f, 1.0f, // top left
+        -1.0f, -1.0f,  0.0f, 0.0f, // bottom left
+         1.0f, -1.0f,  1.0f, 0.0f, // bottom right
 
-        -1.0f,  1.0f,  0.0f, 1.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f
+        -1.0f,  1.0f,  0.0f, 1.0f, // top left
+         1.0f, -1.0f,  1.0f, 0.0f, // bottom right
+         1.0f,  1.0f,  1.0f, 1.0f  // top right
     };
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -43,13 +43,13 @@ void FrameBuffer::setupVerticesSmallWindow()
     float vertices[] = {
         // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
         // positions   // texCoords
-        -0.3f,  1.0f,  0.0f, 1.0f,
-        -0.3f,  0.7f,  0.0f, 0.0f,
-         0.3f,  0.7f,  1.0f, 0.0f,
+        -0.3f,  1.0f,  0.0f, 1.0f, // top left
+        -0.3f,  0.7f,  0.0f, 0.0f, // bottom left
+         0.3f,  0.7f,  1.0f, 0.0f, // bottom right
 
-        -0.3f,  1.0f,  0.0f, 1.0f,
-         0.3f,  0.7f,  1.0f, 0.0f,
-         0.3f,  1.0f,  1.0f, 1.0f
+        -0.3f,  1.0f,  0.0f, 1.0f, // top left
+         0.3f,  0.7f,  1.0f, 0.0f, // bottom right
+         0.3f,  1.0f,  1.0f, 1.0f  // top right
     };
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -75,29 +75,39 @@ void FrameBuffer::initFrameBuffer(unsigned int width, unsigned int height)
 
     // framebuffer configuration
     // -------------------------
+    // 创建 Framebuffer Object
     glGenFramebuffers(1, &FBO);
+    // 绑定 FBO 到 GL_FRAMEBUFFER
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     
     // create a color attachment texture
+    // 创建纹理对象
     glGenTextures(1, &textureColorbuffer);
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    // 设置纹理对象的大小为指定的尺寸（例如窗口尺寸）
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // 将纹理对象附加到 GL_FRAMEBUFFER
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 
     // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
     // ------------------------------------------------------------------------------------------
+    // 创建 Renderbuffer Object
     glGenRenderbuffers(1, &RBO);
+    // 绑定 RBO 到 GL_RENDERBUFFER
     glBindRenderbuffer(GL_RENDERBUFFER, RBO);
     // use a single renderbuffer object for both a depth AND stencil buffer.
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    // 绑定回默认 RBO
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    // now actually attach it
+    // 将 RBO 附加到 GL_FRAMEBUFFER
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
     // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    // 绑定回默认 FBO
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -108,46 +118,35 @@ void FrameBuffer::bindFrameBuffer()
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 }
 
-void FrameBuffer::draw(bool polygonMode)
+void FrameBuffer::draw(bool polygonMode, void (*mainScene)(), glm::vec4 bgColor, void (*anotherScene)())
 {
-    // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // 线框模式
-    if (polygonMode)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
-    // clear all relevant buffers
-    // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    shader->use();
-    glBindVertexArray(VAO);
-
-    // use the color attachment texture as the texture of the quad plane
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
-}
-
-void FrameBuffer::draw(bool polygonMode, void (*anotherDraw)())
-{
-    // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // 线框模式
-    if (polygonMode)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
-    // clear all relevant buffers
-    // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    bindFrameBuffer();
+    // enable depth testing (is disabled for rendering screen-space quad)
+    glEnable(GL_DEPTH_TEST);
+    // render
+    // ------
+    glClearColor(bgColor.r, bgColor.g, bgColor.b, bgColor.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (anotherDraw != nullptr)
+    mainScene();
+
+    glDisable(GL_DEPTH_TEST);
+    
+    // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // 线框模式
+    if (polygonMode)
     {
-        anotherDraw();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    // clear all relevant buffers
+    // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+    glClearColor(bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (anotherScene != nullptr)
+    {
+        anotherScene();
     }
 
     shader->use();

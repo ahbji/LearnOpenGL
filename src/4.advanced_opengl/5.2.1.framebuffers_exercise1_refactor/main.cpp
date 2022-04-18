@@ -17,7 +17,7 @@ unsigned int cubeTexture, planeTexture, vegetationTexture, windowTexture;
 void loopFunc();
 
 void drawMirror();
-void drawSecne();
+void drawScenes();
 
 std::vector<glm::vec3> vegetationPositions
 {
@@ -145,7 +145,7 @@ void drawMirror()
     }
 }
 
-void drawScene()
+void drawScenes()
 {
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -192,17 +192,6 @@ void drawScene()
 
 void loopFunc()
 {
-    frameBuffer->bindFrameBuffer();
-    // enable depth testing (is disabled for rendering screen-space quad)
-    glEnable(GL_DEPTH_TEST);
-    // render
-    // ------
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    drawMirror();
-
-    // disable depth test so screen-space quad isn't discarded due to depth test.
-    glDisable(GL_DEPTH_TEST);
-    frameBuffer->draw(false, drawScene);
+    glm::vec4 bgColor = glm::vec4(0.2f, 0.3f, 0.3f, 1.0f);
+    frameBuffer->draw(false, drawMirror, bgColor, drawScenes);
 }
