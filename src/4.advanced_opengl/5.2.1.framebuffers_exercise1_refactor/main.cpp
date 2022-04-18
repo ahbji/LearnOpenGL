@@ -193,5 +193,5 @@ void drawScenes()
 void loopFunc()
 {
     glm::vec4 bgColor = glm::vec4(0.2f, 0.3f, 0.3f, 1.0f);
-    frameBuffer->draw(false, drawMirror, bgColor, drawScenes);
+    frameBuffer->draw(drawMirror, bgColor, false, drawScenes);
 }

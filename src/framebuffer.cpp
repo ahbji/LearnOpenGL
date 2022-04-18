@@ -111,16 +111,10 @@ void FrameBuffer::initFrameBuffer(unsigned int width, unsigned int height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBuffer::bindFrameBuffer()
+void FrameBuffer::draw(void (*mainScene)(), glm::vec4 bgColor, bool polygonMode, void (*anotherScene)())
 {
-    // ------
     // bind to framebuffer and draw scene as we normally would to color texture 
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-}
-
-void FrameBuffer::draw(bool polygonMode, void (*mainScene)(), glm::vec4 bgColor, void (*anotherScene)())
-{
-    bindFrameBuffer();
     // enable depth testing (is disabled for rendering screen-space quad)
     glEnable(GL_DEPTH_TEST);
     // render
