@@ -148,6 +148,7 @@ set(4.advanced_opengl
     5.6.1.framebuffers_blur
     5.7.1.framebuffers_edge-detection
     6.1.cubemaps_skybox
+    6.1.1.cubemaps_skybox_refactor
     6.2.cubemaps_environment_mapping
     8.advanced_glsl_ubo
     9.1.geometry_shader_houses
@@ -228,6 +229,11 @@ add_library(FRAMEBUFFER
     "src/framebuffer.cpp"
 )
 set(LIBS ${LIBS} FRAMEBUFFER)
+
+add_library(CUBEMAPS 
+    "src/cubemaps.cpp"
+)
+set(LIBS ${LIBS} CUBEMAPS)
 
 macro(makeLink src dest target)
   add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")
