@@ -103,55 +103,32 @@ set(2.lighting
     1.colors
     2.1.basic_lighting_diffuse
     2.2.basic_lighting_specular
-    2.basic_lighting_refactor
     3.1.materials
     3.2.materials_exercise1
-    3.materials_refactor
     4.1.lighting_maps_diffuse_map
     4.2.lighting_maps_specular_map
     4.4.lighting_maps_exercise4
-    4.lighting_maps_refactor
     5.1.light_casters_directional
-    5.1.1.light_casters_directional_refactor
     5.2.light_casters_point
-    5.2.1.light_casters_point_refactor
     5.3.light_casters_spot
     5.4.light_casters_spot_soft
-    5.4.1.light_casters_spot_refactor
     6.multiple_lights
-    6.1.multiple_lights_refactor
 )
 
 set(3.model_loading
     1.model_loading
-    2.model_loading_refactor
 )
 
 set(4.advanced_opengl
     1.1.depth_testing
-    1.1.1.depth_testing_refactor
     1.2.depth_testing_view
-    1.2.1.depth_testing_view_refactor
     2.stencil_testing
-    2.1.stencil_testing_refactor
     3.1.blending_discard
     3.2.blending_sort
-    3.2.1.blending_refactor
-    4.face_culling_refactor
     5.1.framebuffers
-    5.1.1.framebuffers_refactor
     5.2.framebuffers_exercise1
-    5.2.1.framebuffers_exercise1_refactor
-    5.3.1.framebuffers_inverse_color
-    5.4.1.framebuffers_grey
-    5.5.1.framebuffers_sharpen
-    5.6.1.framebuffers_blur
-    5.7.1.framebuffers_edge-detection
     6.1.cubemaps_skybox
-    6.1.1.cubemaps_skybox_refactor
     6.2.cubemaps_environment_mapping
-    6.3.cubemaps_environment_mapping_reflection
-    6.4.cubemaps_environment_mapping_refraction
     8.advanced_glsl_ubo
     9.1.geometry_shader_houses
     9.2.geometry_shader_exploding
@@ -206,6 +183,33 @@ set(GUEST_ARTICLES
 	#8.guest/2021/3.tessellation/terrain_gpu_dist
 	#8.guest/2021/3.tessellation/terrain_cpu_src
 	8.guest/2021/4.dsa
+)
+
+set(COLLECTIONS
+    collections/1.7.5.camera_exercise1
+    collections/2.2.basic_lighting
+    collections/2.3.materials
+    collections/2.4.lighting_maps
+    collections/2.5.1.light_casters_directional
+    collections/2.5.2.light_casters_point
+    collections/2.5.3.light_casters_spot
+    collections/2.6.multiple_lights
+    collections/3.1.model_loading
+    collections/4.1.1.depth_testing
+    collections/4.1.2.depth_testing_view
+    collections/4.2.stencil_testing
+    collections/4.3.blending
+    collections/4.4.face_culling
+    collections/4.5.1.framebuffers
+    collections/4.5.2.framebuffers_exercise1
+    collections/4.5.3.framebuffers_inverse_color
+    collections/4.5.4.framebuffers_grey
+    collections/4.5.5.framebuffers_sharpen
+    collections/4.5.6.framebuffers_blur
+    collections/4.5.7.framebuffers_edge-detection
+    collections/4.6.1.cubemaps_skybox
+    collections/4.6.2.cubemaps_environment_mapping_reflection
+    collections/4.6.3.cubemaps_environment_mapping_refraction
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
@@ -308,5 +312,8 @@ endforeach(CHAPTER)
 foreach(GUEST_ARTICLE ${GUEST_ARTICLES})
 	create_project_from_sources(${GUEST_ARTICLE} "")
 endforeach(GUEST_ARTICLE)
+foreach(COLLECTIONS ${COLLECTIONS})
+	create_project_from_sources(${COLLECTIONS} "")
+endforeach(COLLECTIONS)
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)
