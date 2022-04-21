@@ -199,6 +199,7 @@ set(COLLECTIONS
     collections/2.9.multiple_lights_horror
     collections/2.10.multiple_lights_biothemical_lab
     collections/3.1.model_loading
+    collections/3.2.model_lighting
     collections/4.1.1.depth_testing
     collections/4.1.2.depth_testing_view
     collections/4.2.stencil_testing
