@@ -194,6 +194,10 @@ set(COLLECTIONS
     collections/2.5.2.light_casters_point
     collections/2.5.3.light_casters_spot
     collections/2.6.multiple_lights
+    collections/2.7.multiple_lights_desert
+    collections/2.8.multiple_lights_factory
+    collections/2.9.multiple_lights_horror
+    collections/2.10.multiple_lights_biothemical_lab
     collections/3.1.model_loading
     collections/4.1.1.depth_testing
     collections/4.1.2.depth_testing_view
