@@ -116,7 +116,7 @@ void scene1()
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
         materialCube->shader->use();
-        materialCube->shader->setVec3("cameraPos", camera.Position);
+        materialCube->shader->setVec3("viewPos", camera.Position);
         materialCube->draw(model, view, projection);
     }
 
@@ -150,7 +150,7 @@ void modelScene()
     nanosuitShader->setMat4("projection", projection);
     nanosuitShader->setMat4("view", view);
     nanosuitShader->setMat4("model", model);
-	nanosuitShader->setVec3("cameraPos", camera.Position);
+	nanosuitShader->setVec3("viewPos", camera.Position);
 
     glActiveTexture(GL_TEXTURE3);
     nanosuitShader->setInt("skybox", 3);

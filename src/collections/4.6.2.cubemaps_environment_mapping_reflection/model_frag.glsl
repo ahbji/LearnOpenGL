@@ -5,7 +5,7 @@ in vec2 TexCoords;
 in vec3 Normal;
 in vec3 Position;
 
-uniform vec3 cameraPos;
+uniform vec3 viewPos;
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_reflection1;
 uniform samplerCube skybox;
@@ -16,7 +16,7 @@ void main()
     vec4 diffuse_color = texture(texture_diffuse1, TexCoords);
 
     // Reflection
-    vec3 incidence = normalize(Position - cameraPos);
+    vec3 incidence = normalize(Position - viewPos);
     vec3 reflection = reflect(incidence, normalize(Normal));
     float reflect_intensity = texture(texture_reflection1, TexCoords).r;
     vec4 reflect_color;
