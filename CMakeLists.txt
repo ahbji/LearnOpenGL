@@ -215,6 +215,7 @@ set(COLLECTIONS
     collections/4.6.1.cubemaps_skybox
     collections/4.6.2.cubemaps_environment_mapping_reflection
     collections/4.6.3.cubemaps_environment_mapping_refraction
+    collections/4.8.advanced_glsl_ubo
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
