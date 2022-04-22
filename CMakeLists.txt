@@ -216,6 +216,10 @@ set(COLLECTIONS
     collections/4.6.2.cubemaps_environment_mapping_reflection
     collections/4.6.3.cubemaps_environment_mapping_refraction
     collections/4.8.advanced_glsl_ubo
+    collections/4.9.0.geometry_shader
+    collections/4.9.1.geometry_house
+    collections/4.9.2.geometry_exploding
+    collections/4.9.3.geometry_normals
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
