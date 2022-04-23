@@ -220,6 +220,10 @@ set(COLLECTIONS
     collections/4.9.1.geometry_house
     collections/4.9.2.geometry_exploding
     collections/4.9.3.geometry_normals
+    collections/4.10.1.instancing_quads
+    collections/4.10.2.instanced_array_quads
+    collections/4.10.3.asteroids
+    collections/4.10.4.asteroids_instanced
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
