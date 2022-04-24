@@ -30,9 +30,8 @@ int main()
 
     cube = new Cube("cube_vertex.glsl", "cube_frag.glsl");
     cube->setupVertices();
-    cube->initTexture(FileSystem::getPath("resources/textures/container.jpg").c_str(), &texture0, "texture0", 0, GL_RGB);
-    cube->initTexture(FileSystem::getPath("resources/textures/awesomeface.png").c_str(), &texture1, "texture1", 1, GL_RGBA);
-
+    texture0 = cube->loadMipMap(FileSystem::getPath("resources/textures/container.jpg").c_str(), "texture0", 0);
+    texture1 = cube->loadMipMap(FileSystem::getPath("resources/textures/awesomeface.png").c_str(), "texture1", 1);
     mainLoop(loopFunc);
 }
 

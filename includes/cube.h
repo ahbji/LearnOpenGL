@@ -16,9 +16,10 @@ public:
     Cube(const char* vertexPath, const char* fragmentPath, const char* geometryPath);
     void setupVertices();
     
-    void initTexture(const char* texturePath, unsigned int* texture, const std::string& textureUnitVariableName ,unsigned int textureUnitID, GLenum format);
     unsigned int loadMipMap(const char* texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID);
+
     void bindTexture(GLenum textureUnit, unsigned int texture);
+    void unBindTexture();
 
     void setupMaterial(float shininess);
     void setupMaterial(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess);

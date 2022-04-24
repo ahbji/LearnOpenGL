@@ -49,20 +49,28 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window);
 
+/**
+ * @brief 初始化 OpenGL window
+ * 
+ * @param windowName 窗口名
+ * @return GLFWwindow* 返回 GLFWwindow 指针
+ */
 GLFWwindow* initWindow(const char* windowName)
 {
-    // glfw: initialize and configure
-    // ------------------------------
+    // 初始化 glfw
     glfwInit();
+    // 设置 opengl 版本号，以便 glfw 创建 OpenGL 上下文时做出适当的调整，
+    // 同时在当前系统没有适当的 OpenGL 版本时无法运行。
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GLFW_MAJOR_VERSION);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GLFW_MINOR_VERSION);
+    // 设置 GLFW 使用 OpenGL Core 模式
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    // glfw window creation
+    // 创建 glfw window
     // --------------------
     window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, windowName, NULL, NULL);
     if (window == NULL)
@@ -71,17 +79,18 @@ GLFWwindow* initWindow(const char* windowName)
         glfwTerminate();
         return nullptr;
     }
+    // 将 window 设置为当前线程的 main context
     glfwMakeContextCurrent(window);
 
+    // 改变窗口的大小的时候，设置回调调整 viewport
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    // tell GLFW to capture our mouse
+    // 设置 GLFW 捕获 mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
+    // 初始化 GLAD ：加载所有 OpenGL 函数指针
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -95,37 +104,52 @@ GLFWwindow* initWindow(const char* windowName)
     return window;
 }
 
-void mainLoop(void (*loopfunc)())
+/**
+ * @brief 执行主循环
+ * 
+ * @param looperFunc 指定 looper 函数
+ */
+void mainLoop(void (*looperFunc)())
 {
+    // 检查 GLFW 是否被要求退出，如果是，则结束 Looper
     while (!glfwWindowShouldClose(window))
     {
         currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // 处理输入控制
         processInput(window);
-        (*loopfunc)();
+
+        (*looperFunc)();
+
+        // 交换双缓冲
+        // 当前 looper 中的渲染指令在 back buffer 中绘制图像，
+        // 当前 looper 结束前，需要将 back buffer 交换到 front buffer ，使图像显示出来。
         glfwSwapBuffers(window);
+        // 检查有鼠标、键盘、窗口更新等事件，并调用对应 callback
         glfwPollEvents();
     }
 }
 
+/**
+ * @brief 关闭 GLFW window
+ */
 void closeWindow()
-{
+{   
+    // 释放 GLFW 窗口
     glfwTerminate();
 }
 
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// glfw: 每当窗口大小改变时，这个回调函数就会被调用
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
+    // 确保 viewport 符合新窗口大小，注意，width 和 height 在 retina 屏幕上将会明显比指定的大。
     glViewport(0, 0, width, height);
 }
 
-// glfw: whenever the mouse moves, this callback is called
+// glfw: 每当鼠标移动时，这个回调函数就会被调用
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
@@ -140,7 +164,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    float yoffset = lastY - ypos; // 因为坐标是从下向上的
 
     lastX = xpos;
     lastY = ypos;
@@ -149,17 +173,18 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 }
 
 
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// glfw: 每当鼠标滚轮滚动时，这个回调函数就会被调用
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
+// 处理输入控制：查询 GLFW 是否在这一帧被按下或释放了相关的按键，并做出相应的反应
+// ----------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
+    // 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 

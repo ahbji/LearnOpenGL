@@ -91,43 +91,6 @@ void Cube::setupVertices()
     glBindVertexArray(0);
 }
 
-void Cube::initTexture(
-    const char* texturePath,
-    unsigned int* texture, 
-    const std::string& textureUnitVariableName ,
-    unsigned int textureUnitID,
-    GLenum format)
-{
-    // load and create a texture 
-    // -------------------------
-    glGenTextures(1, texture);
-    glBindTexture(GL_TEXTURE_2D, *texture);
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-    // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-    // -------------------------------------------------------------------------------------------
-    shader->use();
-    shader->setInt(textureUnitVariableName, textureUnitID);
-}
-
 unsigned int Cube::loadMipMap(const char* texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
 {
     unsigned int textureID;
@@ -157,6 +120,8 @@ unsigned int Cube::loadMipMap(const char* texturePath, const std::string& textur
 
         stbi_image_free(data);
 
+        glBindTexture(GL_TEXTURE_2D, 0);
+
         shader->use();
         shader->setInt(textureUnitVariableName, textureUnitID);
     }
@@ -168,11 +133,17 @@ unsigned int Cube::loadMipMap(const char* texturePath, const std::string& textur
     return textureID;
 }
 
-void Cube::bindTexture(GLenum textureUnit, unsigned int texture) {
+void Cube::bindTexture(GLenum textureUnit, unsigned int textureID) {
     // bind textures on corresponding texture units
     
     glActiveTexture(textureUnit);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+}
+
+void Cube::unBindTexture() {
+    // bind textures on corresponding texture units
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Cube::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
