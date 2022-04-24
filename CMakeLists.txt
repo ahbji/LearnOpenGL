@@ -224,6 +224,9 @@ set(COLLECTIONS
     collections/4.10.2.instanced_array_quads
     collections/4.10.3.asteroids
     collections/4.10.4.asteroids_instanced
+    collections/4.11.1.anti_aliasing_msaa
+    collections/4.11.2.anti_aliasing_offscreen
+    collections/4.11.3.anti_aliasing_fb_exercise1
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
