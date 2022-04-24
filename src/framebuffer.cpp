@@ -133,6 +133,7 @@ void FrameBuffer::draw(void (*mainScene)(), glm::vec4 bgColor, bool polygonMode,
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
+    glEnable(GL_DEPTH_TEST);
     // clear all relevant buffers
     // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
     glClearColor(bgColor.r, bgColor.g, bgColor.b, bgColor.a);
@@ -147,6 +148,7 @@ void FrameBuffer::draw(void (*mainScene)(), glm::vec4 bgColor, bool polygonMode,
     glBindVertexArray(VAO);
     // Draw mirror
     // use the color attachment texture as the texture of the quad plane
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
