@@ -187,6 +187,9 @@ set(GUEST_ARTICLES
 
 set(COLLECTIONS
     collections/1.7.5.camera_exercise1
+    collections/2.2.1.ambient_lighting
+    collections/2.2.2.diffuse_lighting
+    collections/2.2.3.specular_highlight
     collections/2.2.basic_lighting
     collections/2.3.materials
     collections/2.4.lighting_maps

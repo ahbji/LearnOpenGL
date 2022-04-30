@@ -60,13 +60,13 @@ void ininScene1()
     diffuseMap = materialCube->loadMipMap(FileSystem::getPath("resources/textures/container2.png").c_str(), "material.diffuse", Cube::DIFFUSE);
     specularMap = materialCube->loadMipMap(FileSystem::getPath("resources/textures/container2_specular.png").c_str(), "material.specular", Cube::SPECULAR);
 
-    lightSrcCube = new Cube("lightSrc_cube_vertex.glsl", "lightSrc_cube_frag.glsl");
+    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
     lightSrcCube->setupVertices();
 }
 
 void initScene2()
 {
-    nanosuitShader = new Shader("modelVertex.glsl", "modelFrag.glsl");
+    nanosuitShader = new Shader("model_vertex.glsl", "model_frag.glsl");
     nanosuit = new Model(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
 }
 

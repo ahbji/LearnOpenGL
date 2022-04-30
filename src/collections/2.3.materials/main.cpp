@@ -32,7 +32,7 @@ int main()
     materialCube = new Cube("material_cube_vertex.glsl", "material_cube_frag.glsl");
     materialCube->setupVertices();
 
-    lightSrcCube = new Cube("lightSrc_cube_vertex.glsl", "lightSrc_cube_frag.glsl");
+    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
     lightSrcCube->setupVertices();
 
     mainLoop(loopFunc);
@@ -61,7 +61,11 @@ void loopFunc()
     materialCube->shader->setVec3("viewPos", camera.Position);
 
     // light properties
-    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 lightColor;
+    // sin 和 glfwGetTime 函数改变光源的环境光和漫反射颜色，从而很容易地让光源的颜色随着时间变化
+    lightColor.x = sin(glfwGetTime() * 2.0f);
+    lightColor.y = sin(glfwGetTime() * 0.7f);
+    lightColor.z = sin(glfwGetTime() * 1.3f);
     glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
     materialCube->shader->setVec3("light.ambient", ambientColor);

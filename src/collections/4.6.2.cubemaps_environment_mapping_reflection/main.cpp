@@ -60,7 +60,7 @@ void ininScene1()
     materialCube->shader->use();
     materialCube->shader->setInt("skybox", 0);
 
-    lightSrcCube = new Cube("lightSrc_cube_vertex.glsl", "lightSrc_cube_frag.glsl");
+    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
     lightSrcCube->setupVertices();
 }
 

@@ -68,9 +68,9 @@ void loopFunc()
 
     // light position
     float radius = 5.0f;
-    float camX = static_cast<float>(sin(glfwGetTime() * lightSrcSensitivity) * radius);
-    float camZ = static_cast<float>(cos(glfwGetTime() * lightSrcSensitivity) * radius);
-    glm::vec3 dirLightPos(camX, 0.0f, camZ);
+    float lightPosX = static_cast<float>(sin(glfwGetTime() * lightSrcSensitivity) * radius);
+    float lightPosZ = static_cast<float>(cos(glfwGetTime() * lightSrcSensitivity) * radius);
+    glm::vec3 dirLightPos(lightPosX, 0.0f, lightPosZ);
 
     // pass projection matrix to shader (note that in this case it could change every frame)
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);

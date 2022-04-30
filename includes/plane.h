@@ -14,14 +14,14 @@ public:
     };
     
     /**
-     * @brief 构建简单 Plane 对象
+     * @brief 使用两个 shader 构建 Plane 对象
      * 
      * @param vertexPath 顶点着色器文件路径
      * @param fragmentPath 片段着色器文件路径
      */
     Plane(const char* vertexPath, const char* fragmentPath);
     /**
-     * @brief 构建复杂 Plane 对象
+     * @brief 使用三个 shader 构建 Plane 对象
      * 
      * @param vertexPath 顶点着色器文件路径
      * @param fragmentPath 片段着色器文件路径

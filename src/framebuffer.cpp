@@ -121,12 +121,14 @@ void FrameBuffer::initMultisampleFrameBuffer(unsigned int width, unsigned int he
     glGenFramebuffers(1, &FBO);
     // 绑定 FBO 到 GL_FRAMEBUFFER
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-    
+    // 创建纹理对象
     glGenTextures(1, &textureColorBufferMultiSampled);
+    // 将纹理对象绑定到 多重采样纹理
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
-    // 如果最后一个参数为GL_TRUE，图像将会对每个纹素使用相同的样本位置以及相同数量的子采样点个数。
+    // 如果最后一个参数为 GL_TRUE ，图像将会对每个纹素使用相同的样本位置以及相同数量的子采样点个数。
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, width, height, GL_TRUE);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    // 将多重采样纹理附加到 GL_FRAMEBUFFER
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
 
     // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
@@ -135,7 +137,7 @@ void FrameBuffer::initMultisampleFrameBuffer(unsigned int width, unsigned int he
     glGenRenderbuffers(1, &RBO);
     // 绑定 RBO 到 GL_RENDERBUFFER
     glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-    // use a single renderbuffer object for both a depth AND stencil buffer.
+    // 为 RBO 分配多重采样缓冲区
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, width, height);
     // 绑定回默认 RBO
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
