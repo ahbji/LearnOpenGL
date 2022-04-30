@@ -297,6 +297,12 @@ function(create_project_from_sources chapter demo)
         set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin/${chapter}")
         set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin/${chapter}")
     endif(WIN32)
+    if(WIN32)
+        file(GLOB DLLS
+            ${CMAKE_SOURCE_DIR}/dlls/*.dll
+        )
+        add_custom_command(TARGET ${NAME} PRE_BUILD COMMAND ${CMAKE_COMMAND} ARGS -E copy ${DLLS} $<TARGET_FILE_DIR:${NAME}> COMMENT "Copy DLLs to runtime folder to run on Windows")
+    endif(WIN32)
     # copy shader files to build directory
     file(GLOB SHADERS
              "src/${chapter}/${demo}/*.vs"
