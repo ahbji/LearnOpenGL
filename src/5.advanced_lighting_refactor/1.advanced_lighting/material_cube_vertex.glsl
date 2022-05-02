@@ -12,8 +12,7 @@ uniform mat4 projection;
 void main()
 {
     FragPos = vec3(model * vec4(aPos, 1.0));
-    // 创建法线矩阵，用线性代数的操作来移除对法向量错误缩放的影响。
-    Normal = mat3(transpose(inverse(model))) * aNormal;
+    Normal = mat3(transpose(inverse(model))) * aNormal;  
     
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }

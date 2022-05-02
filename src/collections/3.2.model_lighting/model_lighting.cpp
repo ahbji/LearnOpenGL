@@ -3,7 +3,7 @@
 #include <learnopengl/shader.h>
 
 #include <game_window.h>
-#include <model_lighting.h>
+#include <lighting.h>
 #include <cube.h>
 
 Shader* shader;
@@ -39,10 +39,25 @@ int main()
         return -1;
     }
 
-    shader = new Shader("model_vertex.glsl", "model_frag.glsl");
+    shader = new Shader("model_lighting_vertex.glsl", "model_lighting_frag.glsl");
     nanosuit = new Model(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
 
+    // backpack model 需要反转贴图 Y 轴
+    // stbi_set_flip_vertically_on_load(true);
+    // nanosuit = new Model(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    // stbi_set_flip_vertically_on_load(false);
+    
+    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
+    lightSrcCube->setupVertices();
+
     mainLoop(loopFunc);
+
+    delete shader;
+    delete nanosuit;
+    delete lightSrcCube;
+    shader = nullptr;
+    nanosuit = nullptr;
+    lightSrcCube = nullptr;
 }
 
 void loopFunc()
@@ -70,32 +85,36 @@ void loopFunc()
     float linear = 0.09f;
     float quadratic = 0.032f;
 
-    // pass projection matrix to shader (note that in this case it could change every frame)
+    
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+    model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.3f));
 
     
     shader->use();
-    ModelLighting::setupMaterial(shader, 32.0f);
-    ModelLighting::initDirectionalLight(
-        shader,
+
+    Material* material = new Material(32.0f);
+    material->applyLightingMapMaterial(shader);
+    delete material;
+    material = nullptr;
+
+    DirectionalLight* directionalLight = new DirectionalLight(
         camera.Position,
-        -glm::normalize(dirLightPos), 
         ambientColor, 
         diffuseColor,
         specularColor
     );
+    directionalLight->apply(shader, -glm::normalize(dirLightPos));
+    delete directionalLight;
+    directionalLight = nullptr;
+
     for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
     {
-        ModelLighting::initPointLight(
-            shader,
-            i,
+        PointLight* pointLight = new PointLight(
             camera.Position,
-            pointLightPositions[i],
             pointLightColors[i] * 0.1f,
             pointLightColors[i],
             pointLightColors[i],
@@ -103,13 +122,13 @@ void loopFunc()
             linear,
             quadratic
         );
+        pointLight->apply(shader, i, pointLightPositions[i]);
+        delete pointLight;
+        pointLight = nullptr;
     }
-    ModelLighting::initSpotLight(
-		shader,
-        DEFAULT_SPOT_LIGHT_ID,
+
+    SpotLight* spotLight = new SpotLight(
         camera.Position,
-        camera.Position,
-        camera.Front,
         spotLightAmbient,
         spotLightDiffuse,
         spotLightSpecular,
@@ -117,11 +136,30 @@ void loopFunc()
         linear,
         quadratic,
         glm::cos(glm::radians(12.5f)),
-        glm::cos(glm::radians(13.0f))
+        glm::cos(glm::radians(15.0f))
     );
+    spotLight->apply(shader, DEFAULT_SPOT_LIGHT_ID, camera.Position, camera.Front);
+    delete spotLight;
+    spotLight = nullptr;
+
     shader->setMat4("projection", projection);
     shader->setMat4("view", view);
     shader->setMat4("model", model);
 
     nanosuit->Draw(*shader);
+
+    // point light cubes
+    for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
+    {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, pointLightPositions[i]);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightSrcCube->draw(model, view, projection);
+    }
+
+    // directional light cube
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, dirLightPos);
+    model = glm::scale(model, glm::vec3(0.2f));
+    lightSrcCube->draw(model, view, projection);
 }

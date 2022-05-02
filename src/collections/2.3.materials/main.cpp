@@ -1,6 +1,8 @@
 #include <game_window.h>
 #include <cube.h>
 
+#include <lighting.h>
+
 Cube * materialCube;
 Cube * lightSrcCube;
 
@@ -57,10 +59,10 @@ void loopFunc()
 
     materialCube->shader->use();
 
-    materialCube->shader->setVec3("light.position", lightPos);
-    materialCube->shader->setVec3("viewPos", camera.Position);
+    // materialCube->shader->setVec3("light.position", lightPos);
+    // materialCube->shader->setVec3("viewPos", camera.Position);
 
-    // light properties
+    // 光照属性
     glm::vec3 lightColor;
     // sin 和 glfwGetTime 函数改变光源的环境光和漫反射颜色，从而很容易地让光源的颜色随着时间变化
     lightColor.x = sin(glfwGetTime() * 2.0f);
@@ -68,15 +70,24 @@ void loopFunc()
     lightColor.z = sin(glfwGetTime() * 1.3f);
     glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
-    materialCube->shader->setVec3("light.ambient", ambientColor);
-    materialCube->shader->setVec3("light.diffuse", diffuseColor);
-    materialCube->shader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    glm::vec3 specularColor = glm::vec3(1.0f);
+    Lighting* lighting = new Lighting(camera.Position, ambientColor, diffuseColor, specularColor);
+    // 应用光照
+    lighting->apply(materialCube->shader, lightPos);
+    // 清理
+    delete lighting;
+    lighting = nullptr;
 
-    // material properties
-    materialCube->shader->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-    materialCube->shader->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-    materialCube->shader->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    materialCube->shader->setFloat("material.shininess", 32.0f);
+    // 材质属性
+    glm::vec3 materialAmbient = glm::vec3(1.0f, 0.5f, 0.31f);
+    glm::vec3 materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+    glm::vec3 materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
+    Material* material = new Material(materialAmbient, materialDiffuse, materialSpecular, 32.0f);
+    // 应用材质
+    material->applyMaterial(materialCube->shader);
+    // 清理
+    delete material;
+    material = nullptr;
 
     for (unsigned int i = 0; i < 10; i++)
     {

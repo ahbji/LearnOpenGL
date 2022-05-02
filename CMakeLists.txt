@@ -67,6 +67,7 @@ set(CHAPTERS
     3.model_loading
     4.advanced_opengl
     5.advanced_lighting
+    5.advanced_lighting_refactor
     6.pbr
     7.in_practice
 )
@@ -157,6 +158,10 @@ set(5.advanced_lighting
     8.1.deferred_shading
     8.2.deferred_shading_volumes
     9.ssao
+)
+
+set(5.advanced_lighting_refactor
+    1.advanced_lighting
 )
 
 set(6.pbr
@@ -260,6 +265,11 @@ add_library(CUBEMAPS
     "src/cubemaps.cpp"
 )
 set(LIBS ${LIBS} CUBEMAPS)
+
+add_library(LIGHTING 
+    "src/lighting.cpp"
+)
+set(LIBS ${LIBS} LIGHTING)
 
 macro(makeLink src dest target)
   add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")

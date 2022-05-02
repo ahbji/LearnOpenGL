@@ -1,7 +1,9 @@
 #include <game_window.h>
 #include <cube.h>
 
-Cube * lightedCube;
+#include <lighting.h>
+
+Cube * materialCube;
 Cube * lightSrcCube;
 
 const float lightSrcSensitivity = SENSITIVITY * 4;
@@ -22,7 +24,10 @@ glm::vec3 cubePositions[] = {
 };
 
 // 光源位置
-glm::vec3 lightPos(-5.0f, 5.0f, 0.0f);
+glm::vec3 lightPos(-5.0f, 5.0f, 5.0f);
+
+// 光源颜色
+glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
 int main()
 {
@@ -32,8 +37,8 @@ int main()
         return -1;
     }
 
-    lightedCube = new Cube("lightting_vertex.glsl", "lightting_frag.glsl");
-    lightedCube->setupVertices();
+    materialCube = new Cube("material_cube_vertex.glsl", "material_cube_frag.glsl");
+    materialCube->setupVertices();
 
     lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
     lightSrcCube->setupVertices();
@@ -52,11 +57,29 @@ void loopFunc()
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
 
-    lightedCube->shader->use();
-    lightedCube->shader->setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    lightedCube->shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    lightedCube->shader->setVec3("lightPos", lightPos);
-    lightedCube->shader->setVec3("viewPos", camera.Position);
+    materialCube->shader->use();
+
+    // 光照属性
+    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+    glm::vec3 specularColor = glm::vec3(1.0f);
+    Lighting* lighting = new Lighting(camera.Position, ambientColor, diffuseColor, specularColor);
+    // 应用光照
+    lighting->apply(materialCube->shader, lightPos);
+    // 清理
+    delete lighting;
+    lighting = nullptr;
+
+    // 材质属性
+    glm::vec3 materialAmbient = glm::vec3(1.0f, 0.5f, 0.31f);
+    glm::vec3 materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+    glm::vec3 materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
+    Material* material = new Material(materialAmbient, materialDiffuse, materialSpecular, 32.0f);
+    // 应用材质
+    material->applyMaterial(materialCube->shader);
+    // 清理
+    delete material;
+    material = nullptr;
 
     for (unsigned int i = 0; i < 10; i++)
     {
@@ -66,7 +89,7 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        lightedCube->draw(model, view, projection);
+        materialCube->draw(model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
