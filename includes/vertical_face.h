@@ -1,7 +1,8 @@
-#include <learnopengl/shader.h>
-
 #ifndef TRANSPARENT_PLANE_H
 #define TRANSPARENT_PLANE_H
+
+#include <learnopengl/shader.h>
+
 class TransparentVerticalFace
 {
 public:

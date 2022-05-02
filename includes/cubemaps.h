@@ -1,8 +1,8 @@
-#include <learnopengl/shader.h>
-#include <vector>
-
 #ifndef CUBEMAPS_H
 #define CUBEMAPS_H
+
+#include <learnopengl/shader.h>
+#include <vector>
 class CubeMaps
 {
 public:

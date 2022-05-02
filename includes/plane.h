@@ -1,7 +1,8 @@
-#include <learnopengl/shader.h>
-
 #ifndef FLOOR_H
 #define FLOOR_H
+
+#include <learnopengl/shader.h>
+
 class Plane
 {
 public:

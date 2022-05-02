@@ -1,7 +1,8 @@
-#include <learnopengl/shader.h>
-
 #ifndef CUBE_H
 #define CUBE_H
+
+#include <learnopengl/shader.h>
+
 class Cube
 {
 public:

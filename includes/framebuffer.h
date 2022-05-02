@@ -1,7 +1,8 @@
-#include <learnopengl/shader.h>
-
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
+
+#include <learnopengl/shader.h>
+
 class FrameBuffer
 {
 public:
