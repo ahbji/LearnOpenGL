@@ -18,12 +18,12 @@ void Plane::setupVertices()
     // 定义顶点数据
     // ------------------------------------------------------------------
     float vertices[] = {
-        // 标准化设备位置坐标    // texture 坐标
-        //                    设置为 2 ，结合 GL_REPEAT 纹理包围模式，贴图分别在X轴和Y轴上重复两次
-        -5.0f, -0.5f, -5.0f,  0.0f, 0.0f, // bottom-left
-        -5.0f, -0.5f,  5.0f,  0.0f, 2.0f, // top-left
-        5.0f, -0.5f,  5.0f,  2.0f, 2.0f, // top-right
-        5.0f, -0.5f, -5.0f,  2.0f, 0.0f  // bottom-right
+        // 标准化设备位置坐标   // 法线向量        // texture 坐标
+        //                                     设置为 2 ，结合 GL_REPEAT 纹理包围模式，贴图分别在X轴和Y轴上重复两次
+        -5.0f, -0.5f,  -5.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+        -5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, // top-left
+        5.0f,  -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 2.0f, 2.0f, // top-right
+        5.0f,  -0.5f,  -5.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f  // bottom-right
     };
 
     unsigned int indices[] = { // 注意索引从0开始! 
@@ -50,16 +50,19 @@ void Plane::setupVertices()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // 设置 OpenGL 从顶点数据中获取顶点位置坐标
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // 设置 OpenGL 从顶点数据中获取法线向量
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     // 设置 OpenGL 从顶点数据中获取顶点纹理坐标
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
     // 解绑 VAO
     glBindVertexArray(0);
 }
 
-unsigned int Plane::loadMipMap(const char* texturePath, const std::string& sampler2DName ,unsigned int textureUnitID)
+unsigned int Plane::loadMipMap(const char* texturePath, const std::string& sampler2DName ,unsigned int textureUnitID, bool gammaCorrection)
 {
     unsigned int texture;
     // 创建纹理对象
@@ -73,17 +76,28 @@ unsigned int Plane::loadMipMap(const char* texturePath, const std::string& sampl
     if (data)
     {
         // 根据通道数设置纹理格式
-        GLenum format;
+        GLenum internalFormat, dataFormat;
         if (nrChannels == 1)
-            format = GL_RED;
+            internalFormat = dataFormat = GL_RED;
         else if (nrChannels == 3)
-            format = GL_RGB;
+        {
+            internalFormat = gammaCorrection ? 
+                GL_SRGB // 重校纹理（将素材的色域从 sRGB 变回线性色域）
+                : GL_RGB;
+            dataFormat = GL_RGB;
+        }
+
         else if (nrChannels == 4)
-            format = GL_RGBA;
+        {
+            internalFormat = gammaCorrection ? 
+                GL_SRGB_ALPHA // 重校纹理（将素材的色域从 sRGB 变回线性色域）
+                : GL_RGBA;
+            dataFormat = GL_RGBA;
+        }
         // 绑定纹理对象到 2D 纹理目标
         glBindTexture(GL_TEXTURE_2D, texture);
         // 为 2D 纹理目标生成纹理
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
         // 为 2D 纹理目标生成多级渐远纹理
         glGenerateMipmap(GL_TEXTURE_2D);
         // 设置2D纹理在 X 轴的包围方式

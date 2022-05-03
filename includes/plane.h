@@ -43,7 +43,7 @@ public:
      * @param textureUnitID 纹理单元 ID ，取值 0 -- 15 ，或 Plane::DIFFUSE + n ，n 为 0 -- 15
      * @return unsigned int 返回纹理对象指针
      */
-    unsigned int loadMipMap(const char* texturePath, const std::string& sampler2DName ,unsigned int textureUnitID);
+    unsigned int loadMipMap(const char* texturePath, const std::string& sampler2DName ,unsigned int textureUnitID, bool gammaCorrection = false);
 
     /**
      * @brief 绑定纹理纹理单元
