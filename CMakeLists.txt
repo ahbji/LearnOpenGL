@@ -161,7 +161,8 @@ set(5.advanced_lighting
 )
 
 set(5.advanced_lighting_refactor
-    1.blinn_phone
+    1.blinn_phong
+    2.gamma_correction
 )
 
 set(6.pbr
