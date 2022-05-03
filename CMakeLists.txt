@@ -161,7 +161,7 @@ set(5.advanced_lighting
 )
 
 set(5.advanced_lighting_refactor
-    1.advanced_lighting
+    1.blinn_phone
 )
 
 set(6.pbr
