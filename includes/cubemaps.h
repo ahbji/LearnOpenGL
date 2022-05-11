@@ -6,15 +6,10 @@
 class CubeMaps
 {
 public:
-    Shader* shader;
-    
-    CubeMaps(const char* vertexPath, const char* fragmentPath);
+    CubeMaps();
     void setupVertices();
-    
-    unsigned int loadCubemap(std::vector<std::string> faces, const std::string& textureUnitVariableName ,unsigned int textureUnitID);
-    void bindTexture(GLenum textureUnit, unsigned int textureID);
 
-    void draw(glm::mat4 view, glm::mat4 projection);
+    void draw(Shader* shader, glm::mat4 view, glm::mat4 projection);
 
     ~CubeMaps();
 private:

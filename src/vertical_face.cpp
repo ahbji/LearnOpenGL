@@ -1,16 +1,10 @@
 #include <glad/glad.h>
-#include <stb_image.h>
 
 #include <vertical_face.h>
 
-TransparentVerticalFace::TransparentVerticalFace(const char* vertexPath, const char* fragmentPath)
+TransparentVerticalFace::TransparentVerticalFace()
 {
-    shader = new Shader(vertexPath, fragmentPath);
-}
-
-TransparentVerticalFace::TransparentVerticalFace(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
-{
-    shader = new Shader(vertexPath, fragmentPath, geometryPath);
+    setupVertices();
 }
 
 void TransparentVerticalFace::setupVertices()
@@ -51,54 +45,7 @@ void TransparentVerticalFace::setupVertices()
     glBindVertexArray(0);
 }
 
-unsigned int TransparentVerticalFace::loadMipMap(const char* texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(false);
-    unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrChannels == 1)
-            format = GL_RED;
-        else if (nrChannels == 3)
-            format = GL_RGB;
-        else if (nrChannels == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-
-        shader->use();
-        shader->setInt(textureUnitVariableName, textureUnitID);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << texturePath << std::endl;
-        stbi_image_free(data);
-    }
-    return textureID;
-}
-
-void TransparentVerticalFace::bindTexture(GLenum textureUnit, unsigned int texture) {
-    // bind textures on corresponding texture units
-    
-    glActiveTexture(textureUnit);
-    glBindTexture(GL_TEXTURE_2D, texture);
-}
-
-void TransparentVerticalFace::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+void TransparentVerticalFace::draw(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
     // activate shader
     shader->use();
@@ -116,7 +63,4 @@ TransparentVerticalFace::~TransparentVerticalFace()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shader->ID);
-    delete shader;
-    shader = nullptr;
 }

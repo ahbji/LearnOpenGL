@@ -1,16 +1,10 @@
 #include <glad/glad.h>
-#include <stb_image.h>
 
 #include <plane.h>
 
-Plane::Plane(const char* vertexPath, const char* fragmentPath)
+Plane::Plane()
 {
-    shader = new Shader(vertexPath, fragmentPath);
-}
-
-Plane::Plane(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
-{
-    shader = new Shader(vertexPath, fragmentPath, geometryPath);
+    setupVertices();
 }
 
 void Plane::setupVertices()
@@ -62,77 +56,7 @@ void Plane::setupVertices()
     glBindVertexArray(0);
 }
 
-unsigned int Plane::loadMipMap(const char* texturePath, const std::string& sampler2DName ,unsigned int textureUnitID, bool gammaCorrection)
-{
-    unsigned int texture;
-    // 创建纹理对象
-    glGenTextures(1, &texture);
-    
-    int width, height, nrChannels;
-    // 因为 texture 坐标的原点在图片左下角，所以这里不需要反转 Y 轴
-    stbi_set_flip_vertically_on_load(false);
-    // 读取素材，并获取其宽、高、通道数
-    unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        // 根据通道数设置纹理格式
-        GLenum internalFormat, dataFormat;
-        if (nrChannels == 1)
-            internalFormat = dataFormat = GL_RED;
-        else if (nrChannels == 3)
-        {
-            internalFormat = gammaCorrection ? 
-                GL_SRGB // 重校纹理（将素材的色域从 sRGB 变回线性色域）
-                : GL_RGB;
-            dataFormat = GL_RGB;
-        }
-
-        else if (nrChannels == 4)
-        {
-            internalFormat = gammaCorrection ? 
-                GL_SRGB_ALPHA // 重校纹理（将素材的色域从 sRGB 变回线性色域）
-                : GL_RGBA;
-            dataFormat = GL_RGBA;
-        }
-        // 绑定纹理对象到 2D 纹理目标
-        glBindTexture(GL_TEXTURE_2D, texture);
-        // 为 2D 纹理目标生成纹理
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-        // 为 2D 纹理目标生成多级渐远纹理
-        glGenerateMipmap(GL_TEXTURE_2D);
-        // 设置2D纹理在 X 轴的包围方式
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        // 设置2D纹理在 Y 轴的包围方式
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // 设置缩小操作时使用的纹理过滤方式，GL_LINEAR_MIPMAP_LINEAR 在两个邻近的多级渐变纹理之间使用线性插值进行采样 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        // 设置放大操作时使用的纹理过滤方式， GL_LINEAR 生成更加羽化的纹理
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // 释放素材数据
-        stbi_image_free(data);
-
-        // 设置 OpenGL 采样器对应的纹理单元 ID
-        shader->use();
-        shader->setInt(sampler2DName, textureUnitID);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << texturePath << std::endl;
-        stbi_image_free(data);
-    }
-    // 返回纹理对象指针
-    return texture;
-}
-
-void Plane::bindTexture(GLenum textureUnit, unsigned int texture) {
-    // 绑定纹理对象到对应的纹理单元
-    // 激活纹理单元
-    glActiveTexture(textureUnit);
-    // 绑定纹理对象到 GL_TEXTURE_2D 目标
-    glBindTexture(GL_TEXTURE_2D, texture);
-}
-
-void Plane::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+void Plane::draw(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
     // 激活 shader
     shader->use();
@@ -154,7 +78,4 @@ Plane::~Plane()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shader->ID);
-    delete shader;
-    shader = nullptr;
 }

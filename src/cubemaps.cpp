@@ -5,9 +5,9 @@
 
 #include <cubemaps.h>
 
-CubeMaps::CubeMaps(const char* vertexPath, const char* fragmentPath)
+CubeMaps::CubeMaps()
 {
-    shader = new Shader(vertexPath, fragmentPath);
+    setupVertices();
 }
 
 void CubeMaps::setupVertices()
@@ -70,46 +70,7 @@ void CubeMaps::setupVertices()
     glBindVertexArray(0);
 }
 
-unsigned int CubeMaps::loadCubemap(std::vector<std::string> faces, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    stbi_set_flip_vertically_on_load(false);
-    
-    int width, height, nrChannels;
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-    for (unsigned int i = 0; i < faces.size(); i++)
-    {
-        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data)
-        {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            stbi_image_free(data);
-        }
-        else
-        {
-            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-            stbi_image_free(data);
-        }
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    shader->use();
-    shader->setInt(textureUnitVariableName, textureUnitID);
-    return textureID;
-}
-
-void CubeMaps::bindTexture(GLenum textureUnit, unsigned int textureID) {
-    // bind textures on corresponding texture units
-    
-    glActiveTexture(textureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-}
-
-void CubeMaps::draw(glm::mat4 view, glm::mat4 projection)
+void CubeMaps::draw(Shader* shader, glm::mat4 view, glm::mat4 projection)
 {
     // activate shader
     shader->use();
@@ -132,7 +93,4 @@ CubeMaps::~CubeMaps()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shader->ID);
-    delete shader;
-    shader = nullptr;
 }
