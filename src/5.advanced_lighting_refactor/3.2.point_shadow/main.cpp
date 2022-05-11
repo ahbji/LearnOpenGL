@@ -24,6 +24,8 @@ void renderCube();
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+bool shadows = true;
+bool shadowsKeyPressed = false;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -34,9 +36,6 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-// meshes
-unsigned int planeVAO;
 
 int main()
 {
@@ -79,85 +78,62 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     // build and compile shaders
-    // -------------------------、
-    Shader sceneShader("scene.vs", "scene.fs");
-    Shader shadowMapShader("shadow_map.vs", "shadow_map.fs");
+    // -------------------------
+    Shader scenesShader("scenes.vs", "scenes.fs");
+    Shader pointShadowMapShader("point_shadow_map.vs", "point_shadow_map.fs", "point_shadow_map.gs");    
 
-    // plane 顶点数据
-    // ------------------------------------------------------------------
-    float planeVertices[] = {
-        // positions            // normals         // texcoords
-         25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-        -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-        -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-
-         25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-        -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-         25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
-    };
-    // plane VAO
-    unsigned int planeVBO;
-    glGenVertexArrays(1, &planeVAO);
-    glGenBuffers(1, &planeVBO);
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glBindVertexArray(0);
-
-    // 纹理
+    // load textures
     // -------------
     unsigned int woodTexture = loadTexture(FileSystem::getPath("resources/textures/wood.png").c_str());
 
-// ----------------------------------------------------------------------------------------------
     // configure depth map FBO
     // -----------------------
-    // 可以调高阴影贴图的分辨率降低阴影锯齿，结合 PCF 可以得到不错的效果
-    // const unsigned int SHADOW_WIDTH = 20480, SHADOW_HEIGHT = 20480;
+
+
+    // create depth cubemap texture
+    unsigned int depthCubemap;
+    glGenTextures(1, &depthCubemap);
+
+
+// --------使用 cubemap 作为阴影贴图，每个面记录一个方向的深度值---------
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+    // 生成立方体贴图的每个面
     const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    // 设置纹理参数
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+// --------------------------------------------------
+
+    // 使用帧缓冲
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
-    // 创建阴影贴图
-    unsigned int shadowMapTexture;
-    glGenTextures(1, &shadowMapTexture);
-    glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // --------------------- 解决采样过多-------------------------
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-    // ---------------------------------------------------------
-    // 绑定 depthMapFBO 到 GL_FRAMEBUFFER
+
+    // 将 cubemap 阴影贴图绑定到帧缓冲
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    // 附加阴影贴图到 FrameBuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMapTexture, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
-    // 解绑 depthMapFBO
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-// ----------------------------------------------------------------------------------------------
+
 
     // shader configuration
     // --------------------
-    sceneShader.use();
-    sceneShader.setInt("diffuseTexture", 0); // 设置光照贴图的纹理单元
-    sceneShader.setInt("shadowMap", 1);      // 设置阴影贴图的纹理单元
+    scenesShader.use();
+    scenesShader.setInt("diffuseTexture", 0); // 设置漫反射贴图的纹理单元
+    scenesShader.setInt("depthMap", 1);       // 设置阴影贴图的纹理单元
 
-    // 在平行光方向上假定一个光源位置
+    // lighting info
     // -------------
-    glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+    glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
     // render loop
     // -----------
@@ -173,76 +149,65 @@ int main()
         // -----
         processInput(window);
 
+        // move light position over time
+        lightPos.z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
+
         // render
         // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-// ----------------------------------------------------------------------------------------------
-        
-        // 阴影贴图通常和主场景有着不同的分辨率，因此需要改变 viewport
-        // 如果忘了更新视口参数，最后的阴影贴图要么太小要么就不完整。
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        // 绑定 depthMapFBO
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        
+        // 0. 分别生成各个方向上的 VP 矩阵
+        // -----------------------------------------------
+        float near_plane = 1.0f;
+        float far_plane  = 25.0f;
+        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
+        std::vector<glm::mat4> shadowTransforms;
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+        shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3( 0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f)));
+
         // 1. 用场景的深度值构建阴影贴图
-        // --------------------------------------------------------------
-        glm::mat4 lightProjection, lightView;
-        glm::mat4 lightSpaceMatrix;
-        float near_plane = 1.0f, far_plane = 7.5f;
-
-        // 场景光照为平行光，所需创建正交投影矩阵
-        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-        // 以光源的位置为视点构建 view 矩阵
-        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-        // 得到光源的 VP 矩阵
-        lightSpaceMatrix = lightProjection * lightView;
-        // 构建阴影贴图
-        shadowMapShader.use();
-        shadowMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-        renderScene(shadowMapShader); // shadowMapShader 将场景的深度值写入深度缓冲，从而构建阴影贴图。
-
-        // 解绑 depthMapFBO
+        // --------------------------------
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            pointShadowMapShader.use();
+            for (unsigned int i = 0; i < 6; ++i)
+                pointShadowMapShader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+            pointShadowMapShader.setFloat("far_plane", far_plane);
+            pointShadowMapShader.setVec3("lightPos", lightPos);
+            renderScene(pointShadowMapShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-// ----------------------------------------------------------------------------------------------
 
-        // 2. 结合阴影贴图渲染场景
-        // 重置 viewport
+        // 2. 渲染场景
+        // -------------------------
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        sceneShader.use();
+        scenesShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        sceneShader.setMat4("projection", projection);
-        sceneShader.setMat4("view", view);
-
-        sceneShader.setVec3("viewPos", camera.Position);
-        sceneShader.setVec3("lightPos", lightPos);
-
-        // 在着色器中用来将世界空间坐标系的顶点位置转换到光空间坐标系，以判断是否渲染阴影
-        sceneShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-        // 绑定光照贴图
+        scenesShader.setMat4("projection", projection);
+        scenesShader.setMat4("view", view);
+        // set lighting uniforms
+        scenesShader.setVec3("lightPos", lightPos);
+        scenesShader.setVec3("viewPos", camera.Position);
+        scenesShader.setInt("shadows", shadows); // enable/disable shadows by pressing 'SPACE'
+        scenesShader.setFloat("far_plane", far_plane);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
-        // 绑定阴影贴图
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-        // 渲染场景
-        renderScene(sceneShader);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+        renderScene(scenesShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &planeVAO);
-    glDeleteBuffers(1, &planeVBO);
 
     glfwTerminate();
     return 0;
@@ -252,30 +217,43 @@ int main()
 // --------------------
 void renderScene(const Shader &shader)
 {
-    // floor
+    // room cube
     glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(5.0f));
     shader.setMat4("model", model);
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDisable(GL_CULL_FACE); // note that we disable culling here since we render 'inside' the cube instead of the usual 'outside' which throws off the normal culling methods.
+    shader.setInt("reverse_normals", 1); // A small little hack to invert normals when drawing cube from the inside so lighting still works.
+    renderCube();
+    shader.setInt("reverse_normals", 0); // and of course disable it
+    glEnable(GL_CULL_FACE);
     // cubes
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+    model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
     model = glm::scale(model, glm::vec3(0.5f));
     shader.setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+    model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
+    model = glm::scale(model, glm::vec3(0.75f));
+    shader.setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
     model = glm::scale(model, glm::vec3(0.5f));
     shader.setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+    model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
+    model = glm::scale(model, glm::vec3(0.5f));
+    shader.setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
     model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    model = glm::scale(model, glm::vec3(0.25));
+    model = glm::scale(model, glm::vec3(0.75f));
     shader.setMat4("model", model);
     renderCube();
 }
-
 
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
@@ -367,6 +345,16 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !shadowsKeyPressed)
+    {
+        shadows = !shadows;
+        shadowsKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+    {
+        shadowsKeyPressed = false;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -384,7 +372,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
-
     if (firstMouse)
     {
         lastX = xpos;

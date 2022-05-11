@@ -9,7 +9,6 @@ in VS_OUT {
 } fs_in;
 
 uniform sampler2D diffuseTexture;
-
 uniform sampler2D shadowMap;
 
 uniform vec3 lightPos;
@@ -62,7 +61,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     // 3. 最终通过样本的总数目将结果平均化
     shadow /= 9.0;
 
-    // 解决采样过多
+    // 解决采样过多：当光线的截锥体的 far_plane 区域外，保持阴影为 0.0 。  
     if(projCoords.z > 1.0)
         shadow = 0.0;
 

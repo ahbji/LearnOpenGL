@@ -163,7 +163,9 @@ set(5.advanced_lighting
 set(5.advanced_lighting_refactor
     1.blinn_phong
     2.gamma_correction
-    3.shadow_mapping
+    3.1.dir_shadow
+    3.2.point_shadow
+    3.3.csm
 )
 
 set(6.pbr

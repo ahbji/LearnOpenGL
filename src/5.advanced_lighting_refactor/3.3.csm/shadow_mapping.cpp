@@ -27,8 +27,8 @@ std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview);
 void drawCascadeVolumeVisualizers(const std::vector<glm::mat4>& lightMatrices, Shader* shader);
 
 // settings
-const unsigned int SCR_WIDTH = 2560;
-const unsigned int SCR_HEIGHT = 1440;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -42,7 +42,12 @@ float cameraFarPlane = 500.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-std::vector<float> shadowCascadeLevels{ cameraFarPlane / 50.0f, cameraFarPlane / 25.0f, cameraFarPlane / 10.0f, cameraFarPlane / 2.0f };
+std::vector<float> shadowCascadeLevels{ 
+    cameraFarPlane / 50.0f, 
+    cameraFarPlane / 25.0f, 
+    cameraFarPlane / 10.0f, 
+    cameraFarPlane / 2.0f 
+};
 int debugLayer = 0;
 
 // meshes
@@ -107,10 +112,10 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader shader("10.shadow_mapping.vs", "10.shadow_mapping.fs");
-    Shader simpleDepthShader("10.shadow_mapping_depth.vs", "10.shadow_mapping_depth.fs", "10.shadow_mapping_depth.gs");
-    Shader debugDepthQuad("10.debug_quad.vs", "10.debug_quad_depth.fs");
-    Shader debugCascadeShader("10.debug_cascade.vs", "10.debug_cascade.fs");
+    Shader sceneShader("scenes.vs", "scenes.fs");
+    Shader csmShader("cascaded_shadow_mapping.vs", "cascaded_shadow_mapping.fs", "cascaded_shadow_mapping.gs");
+    Shader debugDepthQuad("debug_quad.vs", "debug_quad_depth.fs");
+    Shader debugCascadeShader("debug_cascade.vs", "debug_cascade.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -145,7 +150,7 @@ int main()
     // configure light FBO
     // -----------------------
     glGenFramebuffers(1, &lightFBO);
-
+    // 创建阴影贴图
     glGenTextures(1, &shadowMapTexture);
     glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapTexture);
     glTexImage3D(
@@ -154,13 +159,15 @@ int main()
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // --------------------- 解决采样过多-------------------------
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
     constexpr float bordercolor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
-
+    
+    // 绑定 lightFBO 到 GL_FRAMEBUFFER
     glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+    // 附加阴影贴图到 FrameBuffer
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMapTexture, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
@@ -171,7 +178,7 @@ int main()
         std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!";
         throw 0;
     }
-
+    // 解绑 lightFBO
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // configure UBO
@@ -185,9 +192,12 @@ int main()
 
     // shader configuration
     // --------------------
-    shader.use();
-    shader.setInt("diffuseTexture", 0);
-    shader.setInt("shadowMap", 1);
+    // 配置 scenes shader
+    sceneShader.use();
+    sceneShader.setInt("diffuseTexture", 0);
+    sceneShader.setInt("shadowMap", 1);
+    
+    //
     debugDepthQuad.use();
     debugDepthQuad.setInt("depthMap", 0);
 
@@ -218,53 +228,60 @@ int main()
         // 0. UBO setup
         const auto lightMatrices = getLightSpaceMatrices();
         glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+        // lightMatrices 通过 matricesUBO 批量写入 csmShader 和 sceneShader
         for (size_t i = 0; i < lightMatrices.size(); ++i)
         {
+            // cascaded_shadow_mapping.gs
             glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &lightMatrices[i]);
         }
+        // 解绑 UBO
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        // 1. render depth of scene to texture (from light's perspective)
+        glViewport(0, 0, depthMapResolution, depthMapResolution);
+
+        // 1. 以光源视角获得的场景深度值渲染阴影贴图
         // --------------------------------------------------------------
         //lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
         // render scene from light's point of view
-        simpleDepthShader.use();
-
         glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
-        glViewport(0, 0, depthMapResolution, depthMapResolution);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glCullFace(GL_FRONT);  // peter panning
-        renderScene(simpleDepthShader);
+        glCullFace(GL_FRONT);  // 解决 peter panning
+
+        // 渲染阴影贴图
+        csmShader.use();
+        renderScene(csmShader);
+        
         glCullFace(GL_BACK);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // reset viewport
+        // 2. render scene as normal using the generated depth/shadow map  
+        // --------------------------------------------------------------
+        // 重置 viewport
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // 2. render scene as normal using the generated depth/shadow map  
-        // --------------------------------------------------------------
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shader.use();
+        sceneShader.use();
         const glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, cameraNearPlane, cameraFarPlane);
         const glm::mat4 view = camera.GetViewMatrix();
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", view);
+        sceneShader.setMat4("projection", projection);
+        sceneShader.setMat4("view", view);
         // set light uniforms
-        shader.setVec3("viewPos", camera.Position);
-        shader.setVec3("lightDir", lightDir);
-        shader.setFloat("farPlane", cameraFarPlane);
-        shader.setInt("cascadeCount", shadowCascadeLevels.size());
+        sceneShader.setVec3("viewPos", camera.Position);
+        sceneShader.setVec3("lightDir", lightDir);
+        sceneShader.setFloat("farPlane", cameraFarPlane);
+        sceneShader.setInt("cascadeCount", shadowCascadeLevels.size());
         for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
         {
-            shader.setFloat("cascadePlaneDistances[" + std::to_string(i) + "]", shadowCascadeLevels[i]);
+            sceneShader.setFloat("cascadePlaneDistances[" + std::to_string(i) + "]", shadowCascadeLevels[i]);
         }
+        // 绑定光照贴图
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
+        // 绑定阴影贴图
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMapTexture);
-        renderScene(shader);
+        // 渲染场景
+        renderScene(sceneShader);
 
         if (lightMatricesCache.size() != 0)
         {
@@ -532,6 +549,7 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
+    // 按下 F 键开启或关闭显示光照贴图
     static int fPress = GLFW_RELEASE;
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE && fPress == GLFW_PRESS)
     {
@@ -539,6 +557,7 @@ void processInput(GLFWwindow *window)
     }
     fPress = glfwGetKey(window, GLFW_KEY_F);
 
+    // 按下小键盘 + 键切换显示不同层级的光照贴图
     static int plusPress = GLFW_RELEASE;
     if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_RELEASE && plusPress == GLFW_PRESS)
     {
@@ -550,6 +569,7 @@ void processInput(GLFWwindow *window)
     }
     plusPress = glfwGetKey(window, GLFW_KEY_KP_ADD);
 
+    // 显示光锥体
     static int cPress = GLFW_RELEASE;
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE && cPress == GLFW_PRESS)
     {
@@ -635,8 +655,10 @@ unsigned int loadTexture(char const * path)
 
 std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview)
 {
+    // 在 NDC 立方体的角点上应用视图矩阵和投影矩阵的逆矩阵来获得世界空间中的平截头体角
+    // VP 矩阵的逆矩阵
     const auto inv = glm::inverse(projview);
-
+    // 生成 NDC 立方体顶点在世界空间中的坐标
     std::vector<glm::vec4> frustumCorners;
     for (unsigned int x = 0; x < 2; ++x)
     {
@@ -644,11 +666,25 @@ std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& projview)
         {
             for (unsigned int z = 0; z < 2; ++z)
             {
-                const glm::vec4 pt = inv * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f);
+                const glm::vec4 pt = 
+                    inv * glm::vec4(
+                        2.0f * x - 1.0f, 
+                        2.0f * y - 1.0f, 
+                        2.0f * z - 1.0f, 
+                        1.0f
+                    );
                 frustumCorners.push_back(pt / pt.w);
             }
         }
     }
+    // inv * vec4(-1.0f, -1.0f, -1.0f, 1.0f)
+    // inv * vec4(-1.0f, -1.0f,  1.0f, 1.0f)
+    // inv * vec4(-1.0f,  1.0f, -1.0f, 1.0f)
+    // inv * vec4(-1.0f,  1.0f,  1.0f, 1.0f)
+    // inv * vec4( 1.0f, -1.0f, -1.0f, 1.0f)
+    // inv * vec4( 1.0f, -1.0f,  1.0f, 1.0f)
+    // inv * vec4( 1.0f,  1.0f, -1.0f, 1.0f)
+    // inv * vec4( 1.0f,  1.0f,  1.0f, 1.0f)
 
     return frustumCorners;
 }
@@ -661,9 +697,11 @@ std::vector<glm::vec4> getFrustumCornersWorldSpace(const glm::mat4& proj, const 
 
 glm::mat4 getLightSpaceMatrix(const float nearPlane, const float farPlane)
 {
+    // 光锥体透视投影矩阵
     const auto proj = glm::perspective(
         glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, nearPlane,
         farPlane);
+    // NDC 立方体的顶点在世界空间中的坐标
     const auto corners = getFrustumCornersWorldSpace(proj, camera.GetViewMatrix());
 
     glm::vec3 center = glm::vec3(0, 0, 0);
@@ -671,10 +709,13 @@ glm::mat4 getLightSpaceMatrix(const float nearPlane, const float farPlane)
     {
         center += glm::vec3(v);
     }
-    center /= corners.size();
+    // 计算中间级联的坐标
+    center /= corners.size(); // inv * vec3(0, 0, 0)
 
+    // 以光线视角构建正交投影矩阵
+    // 1. 以光线视角构建 View 矩阵
     const auto lightView = glm::lookAt(center + lightDir, center, glm::vec3(0.0f, 1.0f, 0.0f));
-
+    // 2. 将 NDC 立方体的顶点在世界空间中的坐标转换为光线视角空间中的坐标
     float minX = std::numeric_limits<float>::max();
     float maxX = std::numeric_limits<float>::min();
     float minY = std::numeric_limits<float>::max();
@@ -710,9 +751,8 @@ glm::mat4 getLightSpaceMatrix(const float nearPlane, const float farPlane)
     {
         maxZ *= zMult;
     }
-
     const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
-
+    // 返回光空间 VP 矩阵
     return lightProjection * lightView;
 }
 
@@ -723,14 +763,17 @@ std::vector<glm::mat4> getLightSpaceMatrices()
     {
         if (i == 0)
         {
+            // 近平面光锥体矩阵
             ret.push_back(getLightSpaceMatrix(cameraNearPlane, shadowCascadeLevels[i]));
         }
         else if (i < shadowCascadeLevels.size())
         {
+            // 中间光锥体矩阵
             ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], shadowCascadeLevels[i]));
         }
         else
         {
+            // 远平面光锥体矩阵
             ret.push_back(getLightSpaceMatrix(shadowCascadeLevels[i - 1], cameraFarPlane));
         }
     }
