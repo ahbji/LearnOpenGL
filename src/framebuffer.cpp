@@ -5,11 +5,11 @@
 
 FrameBuffer::FrameBuffer(unsigned int screenWidth, unsigned int screenHeight)
 {
-    setupVertices();
+    setupFullScreenVertices();
     initFrameBuffer(screenWidth, screenHeight);
 }
 
-void FrameBuffer::setupVertices()
+void FrameBuffer::setupFullScreenVertices()
 {
     float vertices[] = {
         // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -21,6 +21,36 @@ void FrameBuffer::setupVertices()
         -1.0f,  1.0f,  0.0f, 1.0f, // top left
          1.0f, -1.0f,  1.0f, 0.0f, // bottom right
          1.0f,  1.0f,  1.0f, 1.0f  // top right
+    };
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // position attribute
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    // texture coord attribute
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glBindVertexArray(0);
+}
+
+void FrameBuffer::setupSmallScreenVertices()
+{
+    float vertices[] = {
+        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -0.3f,  1.0f,  0.0f, 1.0f, // top left
+        -0.3f,  0.7f,  0.0f, 0.0f, // bottom left
+         0.3f,  0.7f,  1.0f, 0.0f, // bottom right
+
+        -0.3f,  1.0f,  0.0f, 1.0f, // top left
+         0.3f,  0.7f,  1.0f, 0.0f, // bottom right
+         0.3f,  1.0f,  1.0f, 1.0f  // top right
     };
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -139,7 +169,7 @@ FrameBuffer::~FrameBuffer()
 
 MirrorFrameBuffer::MirrorFrameBuffer(unsigned int screenWidth, unsigned int screenHeight)
 {
-    setupVertices();
+    setupSmallScreenVertices();
     initFrameBuffer(screenWidth, screenHeight);
 }
 
@@ -148,41 +178,11 @@ MirrorFrameBuffer::~MirrorFrameBuffer()
     FrameBuffer::~FrameBuffer();
 }
 
-void MirrorFrameBuffer::setupVertices()
-{
-    float vertices[] = {
-        // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
-        // positions   // texCoords
-        -0.3f,  1.0f,  0.0f, 1.0f, // top left
-        -0.3f,  0.7f,  0.0f, 0.0f, // bottom left
-         0.3f,  0.7f,  1.0f, 0.0f, // bottom right
-
-        -0.3f,  1.0f,  0.0f, 1.0f, // top left
-         0.3f,  0.7f,  1.0f, 0.0f, // bottom right
-         0.3f,  1.0f,  1.0f, 1.0f  // top right
-    };
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // position attribute
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    // texture coord attribute
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    glBindVertexArray(0);
-}
-
-MultisampleFrameBuffer::MultisampleFrameBuffer(unsigned int screenWidth, unsigned int screenHeight)
+MultisampleFrameBuffer::MultisampleFrameBuffer(unsigned int screenWidth, unsigned int screenHeight, bool fullScreen)
 {
     this->screenWidth = screenWidth;
     this->screenHeight = screenHeight;
-    setupVertices();
+    fullScreen ? setupFullScreenVertices() : setupSmallScreenVertices();
     initFrameBuffer(screenWidth, screenHeight);
 }
 
@@ -267,7 +267,7 @@ void MultisampleFrameBuffer::draw(Shader* shader, void (*mainScene)(), glm::vec4
     // now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
     glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
-    glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, screenHeight, screenHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, screenWidth, screenHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
     
     glDisable(GL_DEPTH_TEST);
 

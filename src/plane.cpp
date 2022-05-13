@@ -14,10 +14,10 @@ void Plane::setupVertices()
     float vertices[] = {
         // 标准化设备位置坐标   // 法线向量        // texture 坐标
         //                                     设置为 2 ，结合 GL_REPEAT 纹理包围模式，贴图分别在X轴和Y轴上重复两次
-        -5.0f, -0.5f,  -5.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
-        -5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, // top-left
-        5.0f,  -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 2.0f, 2.0f, // top-right
-        5.0f,  -0.5f,  -5.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f  // bottom-right
+        -5.0f, -0.5f,  -5.0f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f, // bottom-left
+        -5.0f, -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // top-left
+        5.0f,  -0.5f,  5.0f,  0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // top-right
+        5.0f,  -0.5f,  -5.0f, 0.0f, 1.0f, 0.0f, 2.0f, 2.0f  // bottom-right
     };
 
     unsigned int indices[] = { // 注意索引从0开始! 

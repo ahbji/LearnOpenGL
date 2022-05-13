@@ -4,14 +4,16 @@
 
 #include <learnopengl/filesystem.h>
 #include <cubemaps.h>
+#include <texture.h>
 
-Cube * materialCube;
-unsigned int cubeTexture;
+Cube *materialCube, *lightSrcCube;
 
-Cube * lightSrcCube;
-
-Shader* nanosuitShader;
 Model* nanosuit;
+
+CubeMaps* skybox;
+learnGL::CubemapTexture *skyboxTexture;
+
+Shader *nanosuitShader, *materialCubeShader, *lightSrcCubeShader, *cubemapsShader;
 
 const float lightSrcSensitivity = SENSITIVITY * 4;
 
@@ -41,8 +43,6 @@ glm::vec3 pointLightPositions[NUM_POINT_LIGHTS] = {
 
 #define DEFAULT_SPOT_LIGHT_ID 0
 
-CubeMaps* skybox;
-unsigned int skyboxTexture;
 vector<std::string> faces
 {
     FileSystem::getPath("resources/textures/skybox/right.jpg"),
@@ -53,15 +53,15 @@ vector<std::string> faces
     FileSystem::getPath("resources/textures/skybox/back.jpg")
 };
 
-void ininScene1()
+void initScene1()
 {
-    materialCube = new Cube("reflection_scenes_vertex.glsl", "reflection_scenes_frag.glsl");
-    materialCube->setupVertices();
-    materialCube->shader->use();
-    materialCube->shader->setInt("skybox", 0);
+    materialCubeShader = new Shader("reflection_scenes_vertex.glsl", "reflection_scenes_frag.glsl");
+    materialCube = new Cube();
+    materialCubeShader->use();
+    materialCubeShader->setInt("skybox", 0);
 
-    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
-    lightSrcCube->setupVertices();
+    lightSrcCubeShader = new Shader("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
+    lightSrcCube = new Cube();
 }
 
 void initModelScene()
@@ -72,31 +72,14 @@ void initModelScene()
 
 void initSkybox()
 {
-    skybox = new CubeMaps("skybox_vertex.glsl", "skybox_frag.glsl");
-    skybox->setupVertices();
-    skyboxTexture = skybox->loadCubemap(faces, "skybox", 0);
-}
-
-int main()
-{
-    window = initWindow("LearnOpenGL");
-    if (window == nullptr)
-    {
-        return -1;
-    }
-
-    ininScene1();
-    initModelScene();
-    initSkybox();
-
-    mainLoop(loopFunc);
+    cubemapsShader = new Shader("skybox_vertex.glsl", "skybox_frag.glsl");
+    skybox = new CubeMaps();
+    skyboxTexture = new learnGL::CubemapTexture(faces);
+    skyboxTexture->setupTextureUnit(cubemapsShader, "skybox", 0);
 }
 
 void scene1()
 {
-    // bind mipmap textures
-    materialCube->bindTexture(GL_TEXTURE0, cubeTexture);
-
     // light position
     float radius = 5.0f;
     float camX = static_cast<float>(sin(glfwGetTime() * lightSrcSensitivity) * radius);
@@ -115,9 +98,9 @@ void scene1()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        materialCube->shader->use();
-        materialCube->shader->setVec3("viewPos", camera.Position);
-        materialCube->draw(model, view, projection);
+        materialCubeShader->use();
+        materialCubeShader->setVec3("viewPos", camera.Position);
+        materialCube->draw(materialCubeShader, model, view, projection);
     }
 
     for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
@@ -125,13 +108,13 @@ void scene1()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[i]);
         model = glm::scale(model, glm::vec3(0.2f));
-        lightSrcCube->draw(model, view, projection);
+        lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, dirLightPos);
     model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-    lightSrcCube->draw(model, view, projection);
+    lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
 }
 
 void modelScene()
@@ -146,15 +129,14 @@ void modelScene()
     model = glm::scale(model, glm::vec3(0.2f));
 
     nanosuitShader->use();
-    nanosuitShader->use();
     nanosuitShader->setMat4("projection", projection);
     nanosuitShader->setMat4("view", view);
     nanosuitShader->setMat4("model", model);
 	nanosuitShader->setVec3("viewPos", camera.Position);
 
     glActiveTexture(GL_TEXTURE3);
-    nanosuitShader->setInt("skybox", 3);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+    skyboxTexture->setupTextureUnit(nanosuitShader, "skybox", 3);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture->getTexture());
     nanosuit->Draw(*nanosuitShader);
 }
 
@@ -165,8 +147,23 @@ void skyboxScene()
     glm::mat4 view = camera.GetViewMatrix();
     view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 
-    skybox->bindTexture(GL_TEXTURE0, skyboxTexture);
-    skybox->draw(view, projection);
+    skyboxTexture->bind(GL_TEXTURE0);
+    skybox->draw(cubemapsShader, view, projection);
+}
+
+int main()
+{
+    window = initWindow("LearnOpenGL");
+    if (window == nullptr)
+    {
+        return -1;
+    }
+
+    initScene1();
+    initModelScene();
+    initSkybox();
+
+    mainLoop(loopFunc);
 }
 
 void loopFunc()

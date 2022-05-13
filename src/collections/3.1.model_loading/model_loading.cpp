@@ -5,8 +5,8 @@
 #include <game_window.h>
 #include <cube.h>
 
-Shader* shader;
-Model* nanosuit;
+Shader *shader;
+Model *nanosuit;
 
 void loopFunc();
 

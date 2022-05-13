@@ -3,15 +3,22 @@
 #include <plane.h>
 
 #include <lighting.h>
+#include <texture.h>
 
 #include <learnopengl/filesystem.h>
+
+using namespace learnGL;
 
 Cube * materialCube;
 Cube * lightSrcCube;
 Plane * plane;
 
+Shader* materialCubeShader, *lightSrcCubeShader, *planeShader;
+
+Texture* diffuseMap;
+
 const float lightSrcSensitivity = SENSITIVITY * 4;
-unsigned int diffuseMap;
+
 void loopFunc();
 
 glm::vec3 cubePositions[] = {
@@ -41,17 +48,34 @@ int main()
         return -1;
     }
 
-    materialCube = new Cube("material_cube_vertex.glsl", "material_cube_frag.glsl");
-    materialCube->setupVertices();
+    materialCubeShader = new Shader("material_cube_vertex.glsl", "material_cube_frag.glsl");
+    materialCube = new Cube();
 
-    plane = new Plane("plane_vertex.glsl", "plane_frag.glsl");
-    plane->setupVertices();
-    diffuseMap = plane->loadMipMap(FileSystem::getPath("resources/textures/wood.png").c_str(), "material.diffuse", Plane::DIFFUSE, true); // 对素材进行色域重校
+    planeShader = new Shader("plane_vertex.glsl", "plane_frag.glsl");
+    plane = new Plane();
+    diffuseMap = new Texture(FileSystem::getPath("resources/textures/wood.png").c_str());
+    diffuseMap->setupTextureUnit(planeShader, "material.diffuseMap", Texture::DIFFUSE);
 
-    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
-    lightSrcCube->setupVertices();
+    lightSrcCube = new Cube();
+    lightSrcCubeShader = new Shader("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
 
     mainLoop(loopFunc);
+
+    delete materialCubeShader;
+    delete materialCube;
+    delete planeShader;
+    delete plane;
+    delete diffuseMap;
+    delete lightSrcCube;
+    delete lightSrcCubeShader;
+
+    materialCubeShader = nullptr;
+    materialCube = nullptr;
+    planeShader = nullptr;
+    plane = nullptr;
+    diffuseMap = nullptr;
+    lightSrcCube = nullptr;
+    lightSrcCubeShader = nullptr;
 }
 
 void planeScene()
@@ -72,12 +96,14 @@ void planeScene()
         linear,
         quadratic
     );
-    plane->bindTexture(GL_TEXTURE0, diffuseMap);
-    plane->shader->use();
-    pointLight->apply(plane->shader, 0, lightPos);
+
+    diffuseMap->bind(GL_TEXTURE0);
+
+    planeShader->use();
+    pointLight->apply(planeShader, 0, lightPos);
 
     Material* material = new Material(32.0f);
-    material->applyLightingMapMaterial(plane->shader);
+    material->applyLightingMapMaterial(planeShader);
 
     // 清理
     delete pointLight;
@@ -92,7 +118,7 @@ void planeScene()
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.5f, 1.0f, 1.5f));
-    plane->draw(model, view, projection);
+    plane->draw(planeShader, model, view, projection);
 }
 
 void cubeScene()
@@ -120,11 +146,11 @@ void cubeScene()
     glm::vec3 materialSpecular = glm::vec3(0.628281f, 0.555802f, 0.366065f);
     Material* material = new Material(materialAmbient, materialDiffuse, materialSpecular, 0.4f * 128.0f);
 
-    materialCube->shader->use();
+    materialCubeShader->use();
     // 应用光照
-    pointLight->apply(materialCube->shader, 0, lightPos);
+    pointLight->apply(materialCubeShader, 0, lightPos);
     // 应用材质
-    material->applyMaterial(materialCube->shader);
+    material->applyMaterial(materialCubeShader);
 
     // 清理
     delete pointLight;
@@ -144,13 +170,13 @@ void cubeScene()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        materialCube->draw(model, view, projection);
+        materialCube->draw(materialCubeShader, model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-    lightSrcCube->draw(model, view, projection);
+    lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
 }
 
 void loopFunc()

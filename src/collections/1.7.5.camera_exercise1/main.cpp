@@ -1,10 +1,18 @@
 #include <game_window.h>
 #include <cube.h>
+#include <texture.h>
+#include <learnOpengl/shader.h>
 
 #include <learnopengl/filesystem.h>
 
-Cube * cube;
-unsigned int texture0, texture1;
+using namespace learnGL;
+
+Shader *shader;
+
+Texture *texture0, *texture1;
+
+Cube *cube;
+
 void loopFunc();
 
 glm::vec3 cubePositions[] = {
@@ -28,17 +36,25 @@ int main()
         return -1;
     }
 
-    cube = new Cube("cube_vertex.glsl", "cube_frag.glsl");
-    cube->setupVertices();
-    texture0 = cube->loadMipMap(FileSystem::getPath("resources/textures/container.jpg").c_str(), "texture0", 0);
-    texture1 = cube->loadMipMap(FileSystem::getPath("resources/textures/awesomeface.png").c_str(), "texture1", 1);
+    shader = new Shader("cube_vertex.glsl", "cube_frag.glsl");
+    cube = new Cube();
+    texture0 = new Texture(FileSystem::getPath("resources/textures/container.jpg").c_str(), false);
+    texture1 = new Texture(FileSystem::getPath("resources/textures/awesomeface.png").c_str(), false);
     mainLoop(loopFunc);
+    delete cube;
+    delete shader;
+    delete texture0;
+    delete texture1;
+    cube = nullptr;
+    shader = nullptr;
+    texture0 = nullptr;
+    texture1 = nullptr;
 }
 
 void loopFunc()
 {
-    cube->bindTexture(GL_TEXTURE0, texture0);
-    cube->bindTexture(GL_TEXTURE1, texture1);
+    texture0->bind(GL_TEXTURE0);
+    texture1->bind(GL_TEXTURE1);
 
     // render
     // ------
@@ -57,6 +73,6 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        cube->draw(model, view, projection);
+        cube->draw(shader, model, view, projection);
     }
 }

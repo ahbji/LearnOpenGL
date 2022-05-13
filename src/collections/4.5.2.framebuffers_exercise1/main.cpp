@@ -1,22 +1,24 @@
 #include <game_window.h>
 #include <learnopengl/filesystem.h>
+#include <learnopengl/shader.h>
 #include <cube.h>
 #include <plane.h>
 #include <vertical_face.h>
 #include <framebuffer.h>
-
+#include <texture.h>
 #include <map>
 
-Cube * cube;
-Plane * plane;
-FrameBuffer * frameBuffer;
-TransparentVerticalFace * vegetation;
-TransparentVerticalFace * transparentWindow;
+using namespace learnGL;
 
-unsigned int cubeTexture, planeTexture, vegetationTexture, windowTexture;
+Cube *cube;
+Plane *plane;
+FrameBuffer *frameBuffer;
+TransparentVerticalFace *vegetation, *transparentWindow;
+Texture *cubeTexture, *planeTexture, *vegetationTexture, *windowTexture;
+Shader *sceneShader, *framebufferShader;
+
 void loopFunc();
 
-void drawMirror();
 void drawScenes();
 
 std::vector<glm::vec3> vegetationPositions
@@ -50,25 +52,26 @@ int main()
         return -1;
     }
 
-    cube = new Cube("scenes_vertex.glsl", "scenes_frag.glsl");
-    cube->setupVertices();
-    cubeTexture = cube->loadMipMap(FileSystem::getPath("resources/textures/container.jpg").c_str(), "texture1", Cube::DIFFUSE);
+    sceneShader = new Shader("scenes_vertex.glsl", "scenes_frag.glsl");
 
-    plane = new Plane("scenes_vertex.glsl", "scenes_frag.glsl");
-    plane->setupVertices();
-    planeTexture = plane->loadMipMap(FileSystem::getPath("resources/textures/metal.png").c_str(), "texture1", Plane::DIFFUSE);
+    cube = new Cube();
+    cubeTexture = new Texture(FileSystem::getPath("resources/textures/container.jpg").c_str());
+    cubeTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
 
-    vegetation = new TransparentVerticalFace("scenes_vertex.glsl", "scenes_frag.glsl");
-    vegetation->setupVertices();
-    vegetationTexture = vegetation->loadMipMap(FileSystem::getPath("resources/textures/grass.png").c_str(), "texture1", Plane::DIFFUSE);
+    plane = new Plane();
+    planeTexture = new Texture(FileSystem::getPath("resources/textures/metal.png").c_str());
+    planeTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
 
-    transparentWindow = new TransparentVerticalFace("scenes_vertex.glsl", "scenes_frag.glsl");
-    transparentWindow->setupVertices();
-    windowTexture = transparentWindow->loadMipMap(FileSystem::getPath("resources/textures/window.png").c_str(), "texture1", Plane::DIFFUSE);
+    vegetation = new TransparentVerticalFace();
+    vegetationTexture = new Texture(FileSystem::getPath("resources/textures/grass.png").c_str(), true, false);
+    vegetationTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
 
-    frameBuffer = new FrameBuffer("framebuffer_vertex.glsl", "framebuffer_frag.glsl");
-    frameBuffer->setupVerticesSmallWindow();
-    frameBuffer->initFrameBuffer(SCR_WIDTH, SCR_HEIGHT);
+    transparentWindow = new TransparentVerticalFace();
+    windowTexture = new Texture(FileSystem::getPath("resources/textures/window.png").c_str(), true, false);
+    windowTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
+
+    framebufferShader = new Shader("framebuffer_vertex.glsl", "framebuffer_frag.glsl");
+    frameBuffer = new MirrorFrameBuffer(SCR_WIDTH, SCR_HEIGHT);
 
     mainLoop(loopFunc);
 
@@ -107,24 +110,24 @@ void drawMirror()
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::vec3 offset = glm::vec3(0.01f);
 
-    plane->bindTexture(GL_TEXTURE0, planeTexture);
-    plane->draw(model, view, projection);
+    planeTexture->bind(GL_TEXTURE0);
+    plane->draw(sceneShader, model, view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cube->bindTexture(GL_TEXTURE0, cubeTexture);
-    cube->draw(fixDepthFighting(model, offset), view, projection);
+    cubeTexture->bind(GL_TEXTURE0);
+    cube->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cube->draw(fixDepthFighting(model, offset), view, projection);
+    cube->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
 
     for (unsigned int i = 0; i < vegetationPositions.size(); i++)
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, vegetationPositions[i]);
-        vegetation->bindTexture(GL_TEXTURE0, vegetationTexture);
-        vegetation->draw(fixDepthFighting(model, offset), view, projection);
+        vegetationTexture->bind(GL_TEXTURE0);
+        vegetation->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
     }
 
     // sort the transparent windows before rendering
@@ -140,8 +143,8 @@ void drawMirror()
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, it->second);
-        transparentWindow->bindTexture(GL_TEXTURE0, windowTexture);
-        transparentWindow->draw(fixDepthFighting(model, offset), view, projection);
+        windowTexture->bind(GL_TEXTURE0);
+        transparentWindow->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
     }
 }
 
@@ -152,24 +155,24 @@ void drawScenes()
     glm::vec3 offset = glm::vec3(0.01f);
     glm::mat4 model = glm::mat4(1.0f);
 
-    plane->bindTexture(GL_TEXTURE0, planeTexture);
-    plane->draw(model, view, projection);
+    planeTexture->bind(GL_TEXTURE0);
+    plane->draw(sceneShader, model, view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cube->bindTexture(GL_TEXTURE0, cubeTexture);
-    cube->draw(fixDepthFighting(model, offset), view, projection);
+    cubeTexture->bind(GL_TEXTURE0);
+    cube->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cube->draw(fixDepthFighting(model, offset), view, projection);
+    cube->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
 
     for (unsigned int i = 0; i < vegetationPositions.size(); i++)
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, vegetationPositions[i]);
-        vegetation->bindTexture(GL_TEXTURE0, vegetationTexture);
-        vegetation->draw(fixDepthFighting(model, offset), view, projection);
+        vegetationTexture->bind(GL_TEXTURE0);
+        vegetation->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
     }
 
     // sort the transparent windows before rendering
@@ -185,13 +188,13 @@ void drawScenes()
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, it->second);
-        transparentWindow->bindTexture(GL_TEXTURE0, windowTexture);
-        transparentWindow->draw(fixDepthFighting(model, offset), view, projection);
+        windowTexture->bind(GL_TEXTURE0);
+        transparentWindow->draw(sceneShader, fixDepthFighting(model, offset), view, projection);
     }
 }
 
 void loopFunc()
 {
     glm::vec4 bgColor = glm::vec4(0.2f, 0.3f, 0.3f, 1.0f);
-    frameBuffer->draw(drawMirror, bgColor, false, drawScenes);
+    frameBuffer->draw(framebufferShader, drawMirror, bgColor, false, drawScenes);
 }

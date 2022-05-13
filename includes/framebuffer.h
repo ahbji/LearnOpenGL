@@ -21,10 +21,11 @@ protected:
     unsigned int screenTexture;
     unsigned int RBO;
 
-    FrameBuffer();
+    FrameBuffer() = default;
     
     virtual void initFrameBuffer(unsigned int screenWidth, unsigned int screenHeight);
-    virtual void setupVertices();
+    void setupFullScreenVertices();
+    void setupSmallScreenVertices();
 };
 
 class MirrorFrameBuffer : public FrameBuffer
@@ -32,14 +33,12 @@ class MirrorFrameBuffer : public FrameBuffer
 public:
     MirrorFrameBuffer(unsigned int screenWidth, unsigned int screenHeight);
     ~MirrorFrameBuffer();
-protected:
-    virtual void setupVertices();
 };
 
 class MultisampleFrameBuffer : public FrameBuffer
 {
 public:
-    MultisampleFrameBuffer(unsigned int screenWidth, unsigned int screenHeight);
+    MultisampleFrameBuffer(unsigned int screenWidth, unsigned int screenHeight, bool fullScreen = true);
     virtual void draw(Shader* shader, void (*mainScene)(), glm::vec4 bgColor = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f), bool polygonMode = false, void (*anotherScene)()  = nullptr);
     ~MultisampleFrameBuffer();
 private:

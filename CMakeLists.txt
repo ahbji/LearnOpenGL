@@ -97,7 +97,7 @@ set(1.getting_started
     7.2.camera_keyboard_dt
     7.3.camera_mouse_zoom
     7.4.camera_class
-    7.5.camera_exercise1
+    # 7.5.camera_exercise1
 )
 
 set(2.lighting
@@ -195,50 +195,49 @@ set(GUEST_ARTICLES
 )
 
 set(COLLECTIONS
-    # collections/1.7.5.camera_exercise1
-    # collections/2.2.1.ambient_lighting
-    # collections/2.2.2.diffuse_lighting
-    # collections/2.2.3.specular_highlight
-    # collections/2.2.basic_lighting
-    # collections/2.3.materials
-    # collections/2.4.lighting_maps
-    # collections/2.5.1.light_casters_directional
-    # collections/2.5.2.light_casters_point
-    # collections/2.5.3.light_casters_spot
-    # collections/2.6.multiple_lights
-    # collections/2.7.multiple_lights_desert
-    # collections/2.8.multiple_lights_factory
-    # collections/2.9.multiple_lights_horror
-    # collections/2.10.multiple_lights_biothemical_lab
-    # collections/3.1.model_loading
-    # collections/3.2.model_lighting
-    # collections/4.1.1.depth_testing
-    # collections/4.1.2.depth_testing_view
-    # collections/4.2.stencil_testing
-    # collections/4.3.blending
-    # collections/4.4.face_culling
-    # collections/4.5.1.framebuffers
-    # collections/4.5.2.framebuffers_exercise1
-    # collections/4.5.3.framebuffers_inverse_color
-    # collections/4.5.4.framebuffers_grey
-    # collections/4.5.5.framebuffers_sharpen
-    # collections/4.5.6.framebuffers_blur
-    # collections/4.5.7.framebuffers_edge-detection
-    # collections/4.6.1.cubemaps_skybox
-    # collections/4.6.2.cubemaps_environment_mapping_reflection
-    # collections/4.6.3.cubemaps_environment_mapping_refraction
-    # collections/4.8.advanced_glsl_ubo
-    # collections/4.9.0.geometry_shader
-    # collections/4.9.1.geometry_house
-    # collections/4.9.2.geometry_exploding
-    # collections/4.9.3.geometry_normals
-    # collections/4.10.1.instancing_quads
-    # collections/4.10.2.instanced_array_quads
-    # collections/4.10.3.asteroids
-    # collections/4.10.4.asteroids_instanced
-    # collections/4.11.1.anti_aliasing_msaa
-    # collections/4.11.2.anti_aliasing_offscreen
-    # collections/4.11.3.anti_aliasing_fb_exercise1
+    collections/1.7.5.camera_exercise1
+    collections/2.2.1.ambient_lighting
+    collections/2.2.2.diffuse_lighting
+    collections/2.2.3.specular_highlight
+    collections/2.3.materials
+    collections/2.4.lighting_maps
+    collections/2.5.1.light_casters_directional
+    collections/2.5.2.light_casters_point
+    collections/2.5.3.light_casters_spot
+    collections/2.6.multiple_lights
+    collections/2.7.multiple_lights_desert
+    collections/2.8.multiple_lights_factory
+    collections/2.9.multiple_lights_horror
+    collections/2.10.multiple_lights_biothemical_lab
+    collections/3.1.model_loading
+    collections/3.2.model_lighting
+    collections/4.1.1.depth_testing
+    collections/4.1.2.depth_testing_view
+    collections/4.2.stencil_testing
+    collections/4.3.blending
+    collections/4.4.face_culling
+    collections/4.5.1.framebuffers
+    collections/4.5.2.framebuffers_exercise1
+    collections/4.5.3.framebuffers_inverse_color
+    collections/4.5.4.framebuffers_grey
+    collections/4.5.5.framebuffers_sharpen
+    collections/4.5.6.framebuffers_blur
+    collections/4.5.7.framebuffers_edge-detection
+    collections/4.6.1.cubemaps_skybox
+    collections/4.6.2.cubemaps_environment_mapping_reflection
+    collections/4.6.3.cubemaps_environment_mapping_refraction
+    collections/4.8.advanced_glsl_ubo
+    collections/4.9.0.geometry_shader
+    collections/4.9.1.geometry_house
+    collections/4.9.2.geometry_exploding
+    collections/4.9.3.geometry_normals
+    collections/4.10.1.instancing_quads
+    collections/4.10.2.instanced_array_quads
+    collections/4.10.3.asteroids
+    collections/4.10.4.asteroids_instanced
+    collections/4.11.1.anti_aliasing_msaa
+    collections/4.11.2.anti_aliasing_offscreen
+    collections/4.11.3.anti_aliasing_fb_exercise1
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)

@@ -2,6 +2,8 @@
 
 #include <texture.h>
 
+using namespace learnGL;
+
 Texture::Texture(const char* texturePath, bool gammaCorrection, bool flipY)
 {
     loadMipMap(texturePath, gammaCorrection, flipY);
@@ -57,7 +59,7 @@ void Texture::setupDataFormat(int nrChannels, GLenum *out_i_format, GLenum *out_
 void Texture::loadMipMap(const char* texturePath, bool gammaCorrection, bool flipY)
 {
     // 创建纹理对象
-    glGenTextures(1, &this->texture);
+    glGenTextures(1, &texture);
     
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(flipY);
@@ -69,7 +71,7 @@ void Texture::loadMipMap(const char* texturePath, bool gammaCorrection, bool fli
         GLenum internalFormat, dataFormat;
         setupDataFormat(nrChannels, &internalFormat, &dataFormat, gammaCorrection);
         // 绑定纹理对象到 2D 纹理目标
-        glBindTexture(GL_TEXTURE_2D, this->texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
         // 为 2D 纹理目标生成纹理
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
         // 为 2D 纹理目标生成多级渐远纹理
@@ -122,11 +124,11 @@ CubemapTexture::~CubemapTexture()
 
 void CubemapTexture::loadCubemap(std::vector<std::string> faces, bool gammaCorrection, bool flipY)
 {
-    glGenTextures(1, &this->texture);
+    glGenTextures(1, &texture);
     stbi_set_flip_vertically_on_load(flipY);
     
     int width, height, nrChannels;
-    glBindTexture(GL_TEXTURE_CUBE_MAP, this->texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
     // 遍历 cubemap 各个面的素材
     for (unsigned int i = 0; i < faces.size(); i++)
     {

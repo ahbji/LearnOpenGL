@@ -1,8 +1,10 @@
 #include <game_window.h>
 #include <cube.h>
+#include <learnOpengl/shader.h>
 
-Cube * lightedCube;
-Cube * lightSrcCube;
+Shader *lightedCubeShader, *lightSrcCubeShader;
+
+Cube *lightedCube, *lightSrcCube;
 
 const float lightSrcSensitivity = SENSITIVITY * 4;
 
@@ -29,13 +31,21 @@ int main()
         return -1;
     }
 
-    lightedCube = new Cube("lightting_vertex.glsl", "lightting_frag.glsl");
-    lightedCube->setupVertices();
+    lightedCubeShader = new Shader("lightting_vertex.glsl", "lightting_frag.glsl");
+    lightedCube = new Cube();
 
-    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
-    lightSrcCube->setupVertices();
+    lightSrcCubeShader = new Shader("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
+    lightSrcCube = new Cube();
 
     mainLoop(loopFunc);
+    delete lightedCube;
+    delete lightSrcCube;
+    delete lightedCubeShader;
+    delete lightSrcCubeShader;
+    lightedCube = nullptr;
+    lightSrcCube = nullptr;
+    lightedCubeShader = nullptr;
+    lightSrcCubeShader = nullptr;
 }
 
 void loopFunc()
@@ -55,11 +65,11 @@ void loopFunc()
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
 
-    lightedCube->shader->use();
-    lightedCube->shader->setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    lightedCube->shader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    lightedCube->shader->setVec3("lightPos", lightPos);
-    lightedCube->shader->setVec3("viewPos", camera.Position);
+    lightedCubeShader->use();
+    lightedCubeShader->setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+    lightedCubeShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    lightedCubeShader->setVec3("lightPos", lightPos);
+    lightedCubeShader->setVec3("viewPos", camera.Position);
 
     for (unsigned int i = 0; i < 10; i++)
     {
@@ -69,11 +79,11 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        lightedCube->draw(model, view, projection);
+        lightedCube->draw(lightedCubeShader, model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-    lightSrcCube->draw(model, view, projection);
+    lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
 }
