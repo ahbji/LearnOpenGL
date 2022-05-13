@@ -1,19 +1,12 @@
 #include <glad/glad.h>
-#include <stb_image.h>
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <cube.h>
 
-Cube::Cube(const char* vertexPath, const char* fragmentPath)
+Cube::Cube()
 {
-    shader = new Shader(vertexPath, fragmentPath);
-}
-
-Cube::Cube(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
-{
-    shader = new Shader(vertexPath, fragmentPath, geometryPath);
+    setupVertices();
 }
 
 void Cube::setupVertices()
@@ -90,62 +83,7 @@ void Cube::setupVertices()
     glBindVertexArray(0);
 }
 
-unsigned int Cube::loadMipMap(const char* texturePath, const std::string& textureUnitVariableName ,unsigned int textureUnitID)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrChannels == 1)
-            format = GL_RED;
-        else if (nrChannels == 3)
-            format = GL_RGB;
-        else if (nrChannels == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        shader->use();
-        shader->setInt(textureUnitVariableName, textureUnitID);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << texturePath << std::endl;
-        stbi_image_free(data);
-    }
-    return textureID;
-}
-
-void Cube::bindTexture(GLenum textureUnit, unsigned int textureID) {
-    // bind textures on corresponding texture units
-    
-    glActiveTexture(textureUnit);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-}
-
-void Cube::unBindTexture() {
-    // bind textures on corresponding texture units
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void Cube::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+void Cube::draw(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
     // activate shader
     shader->use();
@@ -159,16 +97,16 @@ void Cube::draw(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
     glBindVertexArray(0);
 }
 
-void Cube::drawWithHalo(glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+void Cube::drawWithHalo(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
     // 设置箱子部分的模板值为1
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
 
-    draw(model, view, projection);
+    draw(shader, model, view, projection);
 }
 
-void Cube::drawHalo(glm::mat4 model, glm::vec3 scale, glm::mat4 view, glm::mat4 projection)
+void Cube::drawHalo(Shader* shader, glm::mat4 model, glm::vec3 scale, glm::mat4 view, glm::mat4 projection)
 {
     // 只绘制模板值不为1的部分
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -176,7 +114,7 @@ void Cube::drawHalo(glm::mat4 model, glm::vec3 scale, glm::mat4 view, glm::mat4 
     // glDisable(GL_DEPTH_TEST);
 
     shader->setBool("halo", true);
-    draw(glm::scale(model, scale), view, projection);
+    draw(shader, glm::scale(model, scale), view, projection);
     shader->setBool("halo", false);
 
     glStencilMask(0xFF);
@@ -184,91 +122,8 @@ void Cube::drawHalo(glm::mat4 model, glm::vec3 scale, glm::mat4 view, glm::mat4 
     // glEnable(GL_DEPTH_TEST);
 }
 
-void Cube::setupMaterial(float shininess)
-{
-    shader->use();
-    shader->setFloat("material.shininess", shininess);
-}
-
-void Cube::setupMaterial(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess)
-{
-    shader->use();
-    shader->setVec3("material.ambient", ambient);
-    shader->setVec3("material.diffuse", diffuse);
-    shader->setVec3("material.specular", specular);
-    shader->setFloat("material.shininess", shininess);
-}
-
-void Cube::initDirectionalLight(
-    glm::vec3 viewPos, 
-    glm::vec3 lightDirection, 
-    glm::vec3 lightAmbient, 
-    glm::vec3 lightDiffuse, 
-    glm::vec3 lightSpecular)
-{
-    shader->use();
-    shader->setVec3("viewPos", viewPos);
-    shader->setVec3("dirLight.direction", lightDirection);
-    shader->setVec3("dirLight.ambient", lightAmbient);
-    shader->setVec3("dirLight.diffuse", lightDiffuse);
-    shader->setVec3("dirLight.specular", lightSpecular);
-}
-
-void Cube::initPointLight(
-    unsigned int lightID, 
-    glm::vec3 viewPos, 
-    glm::vec3 lightPos, 
-    glm::vec3 ambient, 
-    glm::vec3 diffuse, 
-    glm::vec3 specular, 
-    float constant, 
-    float linear, 
-    float quadratic)
-{
-    shader->use();
-    shader->setVec3("viewPos", viewPos);
-    shader->setVec3("pointLights[" + std::to_string(lightID) + "].position", lightPos);
-    shader->setVec3("pointLights[" + std::to_string(lightID) + "].ambient", ambient);
-    shader->setVec3("pointLights[" + std::to_string(lightID) + "].diffuse", diffuse);
-    shader->setVec3("pointLights[" + std::to_string(lightID) + "].specular", specular);
-    shader->setFloat("pointLights[" + std::to_string(lightID) + "].constant", constant);
-    shader->setFloat("pointLights[" + std::to_string(lightID) + "].linear", linear);
-    shader->setFloat("pointLights[" + std::to_string(lightID) + "].quadratic", quadratic);
-}
-
-void Cube::initSpotLight(
-    unsigned int lightID, 
-    glm::vec3 viewPos, 
-    glm::vec3 lightPos, 
-    glm::vec3 lightDirection, 
-    glm::vec3 ambient, 
-    glm::vec3 diffuse, 
-    glm::vec3 specular, 
-    float constant, 
-    float linear, 
-    float quadratic, 
-    float cutOff, 
-    float outerCutOff)
-{
-    shader->use();
-    shader->setVec3("viewPos", viewPos);
-    shader->setVec3("spotLights[" + std::to_string(lightID) + "].position", lightPos);
-    shader->setVec3("spotLights[" + std::to_string(lightID) + "].direction", lightDirection);
-    shader->setVec3("spotLights[" + std::to_string(lightID) + "].ambient", ambient);
-    shader->setVec3("spotLights[" + std::to_string(lightID) + "].diffuse", diffuse);
-    shader->setVec3("spotLights[" + std::to_string(lightID) + "].specular", specular);
-    shader->setFloat("spotLights[" + std::to_string(lightID) + "].constant", constant);
-    shader->setFloat("spotLights[" + std::to_string(lightID) + "].linear", linear);
-    shader->setFloat("spotLights[" + std::to_string(lightID) + "].quadratic", quadratic);
-    shader->setFloat("spotLights[" + std::to_string(lightID) + "].cutOff", cutOff);
-    shader->setFloat("spotLights[" + std::to_string(lightID) + "].outerCutOff", outerCutOff);
-}
-
 Cube::~Cube()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shader->ID);
-    delete shader;
-    shader = nullptr;
 }

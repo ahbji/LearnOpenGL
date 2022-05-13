@@ -97,7 +97,6 @@ set(1.getting_started
     7.2.camera_keyboard_dt
     7.3.camera_mouse_zoom
     7.4.camera_class
-    7.5.camera_exercise1
 )
 
 set(2.lighting
@@ -199,7 +198,6 @@ set(COLLECTIONS
     collections/2.2.1.ambient_lighting
     collections/2.2.2.diffuse_lighting
     collections/2.2.3.specular_highlight
-    collections/2.2.basic_lighting
     collections/2.3.materials
     collections/2.4.lighting_maps
     collections/2.5.1.light_casters_directional
@@ -250,6 +248,9 @@ set(LIBS ${LIBS} STB_IMAGE)
 
 add_library(GLAD "src/glad.c")
 set(LIBS ${LIBS} GLAD)
+
+add_library(TEXTURE "src/texture.cpp")
+set(LIBS ${LIBS} TEXTURE)
 
 add_library(CUBE "src/cube.cpp")
 set(LIBS ${LIBS} CUBE)
