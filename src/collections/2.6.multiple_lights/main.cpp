@@ -1,12 +1,18 @@
 #include <game_window.h>
 #include <cube.h>
+#include <texture.h>
+#include <lighting.h>
+#include <learnOpengl/shader.h>
 
 #include <learnopengl/filesystem.h>
 
-Cube * materialCube;
-unsigned int diffuseMap, specularMap;
+using namespace learnGL;
 
-Cube * lightSrcCube;
+Shader *materialCubeShader, *lightSrcCubeShader;
+
+Cube *materialCube, *lightSrcCube;
+
+Texture *diffuseMap, *specularMap;
 
 const float lightSrcSensitivity = SENSITIVITY * 4;
 
@@ -44,13 +50,15 @@ int main()
         return -1;
     }
 
-    materialCube = new Cube("multiple_lights_vertex.glsl", "multiple_lights_frag.glsl");
-    materialCube->setupVertices();
-    diffuseMap = materialCube->loadMipMap(FileSystem::getPath("resources/textures/container2.png").c_str(), "material.diffuse", Cube::DIFFUSE);
-    specularMap = materialCube->loadMipMap(FileSystem::getPath("resources/textures/container2_specular.png").c_str(), "material.specular", Cube::SPECULAR);
+    materialCubeShader = new Shader("multiple_lights_vertex.glsl", "multiple_lights_frag.glsl");
+    materialCube = new Cube();
+    diffuseMap = new Texture(FileSystem::getPath("resources/textures/container2.png").c_str());
+    diffuseMap->setupTextureUnit(materialCubeShader, "material.diffuse", Texture::DIFFUSE);
+    specularMap = new Texture(FileSystem::getPath("resources/textures/container2_specular.png").c_str());
+    specularMap->setupTextureUnit(materialCubeShader, "material.specular", Texture::SPECULAR);
 
-    lightSrcCube = new Cube("lightSrc_cube_vertex.glsl", "lightSrc_cube_frag.glsl");
-    lightSrcCube->setupVertices();
+    lightSrcCubeShader = new Shader("lightSrc_cube_vertex.glsl", "lightSrc_cube_frag.glsl");
+    lightSrcCube = new Cube();
 
     mainLoop(loopFunc);
 }
@@ -58,8 +66,8 @@ int main()
 void loopFunc()
 {
     // bind mipmap textures
-    materialCube->bindTexture(GL_TEXTURE0, diffuseMap);
-    materialCube->bindTexture(GL_TEXTURE1, specularMap);
+    diffuseMap->bind(GL_TEXTURE0);
+    specularMap->bind(GL_TEXTURE1);
     
     // render
     // ------
@@ -76,19 +84,20 @@ void loopFunc()
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
 
-    materialCube->setupMaterial(32.0f);
+    // 应用材质
+    Material *material = new Material(32.0f);
+    material->applyLightingMapMaterial(materialCubeShader);
+    delete material;
+    material = nullptr;
 
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
 
-    materialCube->initDirectionalLight(
-        camera.Position,
-        -glm::normalize(dirLightPos), 
-        ambientColor, 
-        diffuseColor,
-        glm::vec3(1.0f, 1.0f, 1.0f)
-    );
+    DirectionalLight *directionalLight = new DirectionalLight(camera.Position, ambientColor, diffuseColor, lightColor);
+    directionalLight->apply(materialCubeShader, -glm::normalize(dirLightPos));
+    delete directionalLight;
+    directionalLight = nullptr;
 
     glm::vec3 pointLightAmbient = glm::vec3(0.05f);
     glm::vec3 pointLightDiffuse = glm::vec3(0.8f);
@@ -96,39 +105,23 @@ void loopFunc()
     float constant = 1.0f;
     float linear = 0.09f;
     float quadratic = 0.032f;
+    
+    PointLight *pointLight = new PointLight(camera.Position, pointLightAmbient, pointLightDiffuse, pointLightSpecular, 1.0f, 0.09f, 0.032f);
     for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
     {
-        materialCube->initPointLight(
-            i,
-            camera.Position,
-            pointLightPositions[i],
-            pointLightAmbient,
-            pointLightDiffuse,
-            pointLightSpecular,
-            constant,
-            linear,
-            quadratic
-        );
+        pointLight->apply(materialCubeShader, i, pointLightPositions[i]);
     }
+    delete pointLight;
+    pointLight = nullptr;
 
     glm::vec3 spotLightAmbient = glm::vec3(0.0f);
     glm::vec3 spotLightDiffuse = glm::vec3(1.0f);
     glm::vec3 spotLightSpecular = glm::vec3(1.0f);
 
-    materialCube->initSpotLight(
-        DEFAULT_SPOT_LIGHT_ID,
-        camera.Position,
-        camera.Position,
-        camera.Front,
-        spotLightAmbient,
-        spotLightDiffuse,
-        spotLightSpecular,
-        constant,
-        linear,
-        quadratic,
-        glm::cos(glm::radians(12.5f)),
-        glm::cos(glm::radians(15.0f))
-    );
+    SpotLight *spotLight = new SpotLight(camera.Position, spotLightAmbient, spotLightDiffuse, spotLightSpecular, constant, linear, quadratic, glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)));
+    spotLight->apply(materialCubeShader, DEFAULT_SPOT_LIGHT_ID, camera.Position, camera.Front);
+    delete spotLight;
+    spotLight = nullptr;
 
     for (unsigned int i = 0; i < 10; i++)
     {
@@ -138,7 +131,7 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        materialCube->draw(model, view, projection);
+        materialCube->draw(materialCubeShader, model, view, projection);
     }
 
     for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
@@ -146,11 +139,11 @@ void loopFunc()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[i]);
         model = glm::scale(model, glm::vec3(0.2f));
-        lightSrcCube->draw(model, view, projection);
+        lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, dirLightPos);
     model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-    lightSrcCube->draw(model, view, projection);
+    lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
 }

@@ -2,11 +2,12 @@
 #include <learnopengl/filesystem.h>
 #include <cube.h>
 #include <plane.h>
+#include <learnOpengl/shader.h>
 
 Cube * cube;
 Plane * plane;
+Shader *cubeShader, *planeShader;
 
-unsigned int cubeTexture, planeTexture;
 void loopFunc();
 
 
@@ -19,11 +20,11 @@ int main()
         return -1;
     }
 
-    cube = new Cube("depth_test_vertex.glsl", "depth_test_frag.glsl");
-    cube->setupVertices();
+    cubeShader = new Shader("depth_test_vertex.glsl", "depth_test_frag.glsl");
+    cube = new Cube();
 
-    plane = new Plane("depth_test_vertex.glsl", "depth_test_frag.glsl");
-    plane->setupVertices();
+    planeShader = new Shader("depth_test_vertex.glsl", "depth_test_frag.glsl");
+    plane = new Plane();
 
     mainLoop(loopFunc);
     
@@ -43,12 +44,12 @@ void loopFunc()
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cube->draw(model, view, projection);
+    cube->draw(cubeShader, model, view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cube->draw(model, view, projection);
+    cube->draw(cubeShader, model, view, projection);
     
     model = glm::mat4(1.0f);
-    plane->draw(model, view, projection);
+    plane->draw(planeShader, model, view, projection);
 }

@@ -6,10 +6,10 @@
 #include <lighting.h>
 #include <cube.h>
 
-Shader* shader;
-Model* nanosuit;
+Shader *modelShader, *lightSrcShader;
+Model *nanosuit;
 
-Cube * lightSrcCube;
+Cube *lightSrcCube;
 const float lightSrcSensitivity = SENSITIVITY * 4;
 
 void loopFunc();
@@ -39,7 +39,7 @@ int main()
         return -1;
     }
 
-    shader = new Shader("model_lighting_vertex.glsl", "model_lighting_frag.glsl");
+    modelShader = new Shader("model_lighting_vertex.glsl", "model_lighting_frag.glsl");
     nanosuit = new Model(FileSystem::getPath("resources/objects/nanosuit/nanosuit.obj"));
 
     // backpack model 需要反转贴图 Y 轴
@@ -47,15 +47,15 @@ int main()
     // nanosuit = new Model(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     // stbi_set_flip_vertically_on_load(false);
     
-    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
-    lightSrcCube->setupVertices();
+    lightSrcShader = new Shader("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
+    lightSrcCube = new Cube();
 
     mainLoop(loopFunc);
 
-    delete shader;
+    delete modelShader;
     delete nanosuit;
     delete lightSrcCube;
-    shader = nullptr;
+    modelShader = nullptr;
     nanosuit = nullptr;
     lightSrcCube = nullptr;
 }
@@ -93,11 +93,8 @@ void loopFunc()
     model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.3f));
 
-    
-    shader->use();
-
     Material* material = new Material(32.0f);
-    material->applyLightingMapMaterial(shader);
+    material->applyLightingMapMaterial(modelShader);
     delete material;
     material = nullptr;
 
@@ -107,7 +104,7 @@ void loopFunc()
         diffuseColor,
         specularColor
     );
-    directionalLight->apply(shader, -glm::normalize(dirLightPos));
+    directionalLight->apply(modelShader, -glm::normalize(dirLightPos));
     delete directionalLight;
     directionalLight = nullptr;
 
@@ -122,7 +119,7 @@ void loopFunc()
             linear,
             quadratic
         );
-        pointLight->apply(shader, i, pointLightPositions[i]);
+        pointLight->apply(modelShader, i, pointLightPositions[i]);
         delete pointLight;
         pointLight = nullptr;
     }
@@ -138,15 +135,16 @@ void loopFunc()
         glm::cos(glm::radians(12.5f)),
         glm::cos(glm::radians(15.0f))
     );
-    spotLight->apply(shader, DEFAULT_SPOT_LIGHT_ID, camera.Position, camera.Front);
+    spotLight->apply(modelShader, DEFAULT_SPOT_LIGHT_ID, camera.Position, camera.Front);
     delete spotLight;
     spotLight = nullptr;
 
-    shader->setMat4("projection", projection);
-    shader->setMat4("view", view);
-    shader->setMat4("model", model);
+    modelShader->setMat4("projection", projection);
+    modelShader->setMat4("view", view);
+    modelShader->setMat4("model", model);
 
-    nanosuit->Draw(*shader);
+    modelShader->use();
+    nanosuit->Draw(*modelShader);
 
     // point light cubes
     for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
@@ -154,12 +152,12 @@ void loopFunc()
         model = glm::mat4(1.0f);
         model = glm::translate(model, pointLightPositions[i]);
         model = glm::scale(model, glm::vec3(0.2f));
-        lightSrcCube->draw(model, view, projection);
+        lightSrcCube->draw(lightSrcShader, model, view, projection);
     }
 
     // directional light cube
     model = glm::mat4(1.0f);
     model = glm::translate(model, dirLightPos);
     model = glm::scale(model, glm::vec3(0.2f));
-    lightSrcCube->draw(model, view, projection);
+    lightSrcCube->draw(lightSrcShader, model, view, projection);
 }

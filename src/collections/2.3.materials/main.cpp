@@ -3,8 +3,9 @@
 
 #include <lighting.h>
 
-Cube * materialCube;
-Cube * lightSrcCube;
+Shader *materialCubeShader, *lightSrcCubeShader;
+
+Cube *materialCube, *lightSrcCube;
 
 const float lightSrcSensitivity = SENSITIVITY * 4;
 
@@ -31,13 +32,21 @@ int main()
         return -1;
     }
 
-    materialCube = new Cube("material_cube_vertex.glsl", "material_cube_frag.glsl");
-    materialCube->setupVertices();
+    materialCubeShader = new Shader("material_cube_vertex.glsl", "material_cube_frag.glsl");
+    materialCube = new Cube();
 
-    lightSrcCube = new Cube("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
-    lightSrcCube->setupVertices();
+    lightSrcCubeShader = new Shader("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
+    lightSrcCube = new Cube();
 
     mainLoop(loopFunc);
+    delete materialCube;
+    delete lightSrcCube;
+    delete materialCubeShader;
+    delete lightSrcCubeShader;
+    materialCube = nullptr;
+    lightSrcCube = nullptr;
+    materialCubeShader = nullptr;
+    lightSrcCubeShader = nullptr;
 }
 
 void loopFunc()
@@ -57,11 +66,6 @@ void loopFunc()
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
 
-    materialCube->shader->use();
-
-    // materialCube->shader->setVec3("light.position", lightPos);
-    // materialCube->shader->setVec3("viewPos", camera.Position);
-
     // 光照属性
     glm::vec3 lightColor;
     // sin 和 glfwGetTime 函数改变光源的环境光和漫反射颜色，从而很容易地让光源的颜色随着时间变化
@@ -73,7 +77,7 @@ void loopFunc()
     glm::vec3 specularColor = glm::vec3(1.0f);
     Lighting* lighting = new Lighting(camera.Position, ambientColor, diffuseColor, specularColor);
     // 应用光照
-    lighting->apply(materialCube->shader, lightPos);
+    lighting->apply(materialCubeShader, lightPos);
     // 清理
     delete lighting;
     lighting = nullptr;
@@ -84,7 +88,7 @@ void loopFunc()
     glm::vec3 materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
     Material* material = new Material(materialAmbient, materialDiffuse, materialSpecular, 32.0f);
     // 应用材质
-    material->applyMaterial(materialCube->shader);
+    material->applyMaterial(materialCubeShader);
     // 清理
     delete material;
     material = nullptr;
@@ -97,11 +101,11 @@ void loopFunc()
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        materialCube->draw(model, view, projection);
+        materialCube->draw(materialCubeShader, model, view, projection);
     }
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-    lightSrcCube->draw(model, view, projection);
+    lightSrcCube->draw(lightSrcCubeShader, model, view, projection);
 }

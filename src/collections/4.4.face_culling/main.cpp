@@ -3,18 +3,24 @@
 #include <cube.h>
 #include <plane.h>
 #include <vertical_face.h>
+#include <learnOpengl/shader.h>
+#include <texture.h>
 
 #include <glad/glad.h>
 #include <stb_image.h>
 
 #include <map>
 
+using namespace learnGL;
+
 Cube * cube;
 Plane * plane;
 TransparentVerticalFace * vegetation;
 TransparentVerticalFace * transparentWindow;
 
-unsigned int cubeTexture, planeTexture, vegetationTexture, windowTexture;
+Shader *cubeShader, *planeShader, *vegetationShader, *transparentWindowShader;
+Texture *cubeTexture, *planeTexture, *vegetationTexture, *windowTexture;
+
 void loopFunc();
 
 std::vector<glm::vec3> vegetationPositions
@@ -53,21 +59,25 @@ int main()
         return -1;
     }
 
-    cube = new Cube("face_culling_vertex.glsl", "face_culling_frag.glsl");
-    cube->setupVertices();
-    cubeTexture = cube->loadMipMap(FileSystem::getPath("resources/textures/marble.jpg").c_str(), "texture1", Cube::DIFFUSE);
+    cubeShader = new Shader("face_culling_vertex.glsl", "face_culling_frag.glsl");
+    cube = new Cube();
+    cubeTexture = new Texture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
+    cubeTexture->setupTextureUnit(cubeShader, "texture1", Texture::DIFFUSE);
 
-    plane = new Plane("face_culling_vertex.glsl", "face_culling_frag.glsl");
-    plane->setupVertices();
-    planeTexture = plane->loadMipMap(FileSystem::getPath("resources/textures/metal.png").c_str(), "texture1", Plane::DIFFUSE);
+    planeShader = new Shader("face_culling_vertex.glsl", "face_culling_frag.glsl");
+    plane = new Plane();
+    planeTexture = new Texture(FileSystem::getPath("resources/textures/metal.png").c_str());
+    planeTexture->setupTextureUnit(planeShader, "texture1", Texture::DIFFUSE);
 
-    vegetation = new TransparentVerticalFace("face_culling_vertex.glsl", "face_culling_frag.glsl");
-    vegetation->setupVertices();
-    vegetationTexture = vegetation->loadMipMap(FileSystem::getPath("resources/textures/grass.png").c_str(), "texture1", Plane::DIFFUSE);
+    vegetationShader = new Shader("face_culling_vertex.glsl", "face_culling_frag.glsl");
+    vegetation = new TransparentVerticalFace();
+    vegetationTexture = new Texture(FileSystem::getPath("resources/textures/grass.png").c_str(), true, false);
+    vegetationTexture->setupTextureUnit(vegetationShader, "texture1", Texture::DIFFUSE);
 
-    transparentWindow = new TransparentVerticalFace("face_culling_vertex.glsl", "face_culling_frag.glsl");
-    transparentWindow->setupVertices();
-    windowTexture = transparentWindow->loadMipMap(FileSystem::getPath("resources/textures/window.png").c_str(), "texture1", Plane::DIFFUSE);
+    transparentWindowShader = new Shader("face_culling_vertex.glsl", "face_culling_frag.glsl");
+    transparentWindow = new TransparentVerticalFace();
+    windowTexture = new Texture(FileSystem::getPath("resources/textures/window.png").c_str(), true, false);
+    windowTexture->setupTextureUnit(transparentWindowShader, "texture1", Texture::DIFFUSE);
 
     mainLoop(loopFunc);
     
@@ -113,19 +123,19 @@ void loopFunc()
     // 临时关闭面剔除
     setupCullFace(false);
     glm::mat4 model = glm::mat4(1.0f);
-    plane->bindTexture(GL_TEXTURE0, planeTexture);
-    plane->draw(model, view, projection);
+    planeTexture->bind(GL_TEXTURE0);
+    plane->draw(planeShader, model, view, projection);
     // 恢复面剔除
     setupCullFace(true);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cube->bindTexture(GL_TEXTURE0, cubeTexture);
-    cube->draw(fixDepthFighting(model, offset), view, projection);
+    cubeTexture->bind(GL_TEXTURE0);
+    cube->draw(cubeShader, fixDepthFighting(model, offset), view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cube->draw(fixDepthFighting(model, offset), view, projection);
+    cube->draw(cubeShader, fixDepthFighting(model, offset), view, projection);
 
     // 临时关闭面剔除
     setupCullFace(false);
@@ -133,8 +143,8 @@ void loopFunc()
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, vegetationPositions[i]);
-        vegetation->bindTexture(GL_TEXTURE0, vegetationTexture);
-        vegetation->draw(fixDepthFighting(model, offset), view, projection);
+        vegetationTexture->bind(GL_TEXTURE0);
+        vegetation->draw(vegetationShader, fixDepthFighting(model, offset), view, projection);
     }
 
     // sort the transparent windows before rendering
@@ -150,8 +160,8 @@ void loopFunc()
     {
         model = glm::mat4(1.0f);
         model = glm::translate(model, it->second);
-        transparentWindow->bindTexture(GL_TEXTURE0, windowTexture);
-        transparentWindow->draw(fixDepthFighting(model, offset), view, projection);
+        windowTexture->bind(GL_TEXTURE0);
+        transparentWindow->draw(transparentWindowShader, fixDepthFighting(model, offset), view, projection);
     }
     // 恢复面剔除
     setupCullFace(true);

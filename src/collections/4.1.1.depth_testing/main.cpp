@@ -2,11 +2,16 @@
 #include <learnopengl/filesystem.h>
 #include <cube.h>
 #include <plane.h>
+#include <learnOpengl/shader.h>
+#include <texture.h>
 
-Cube * cube;
-Plane * plane;
+using namespace learnGL;
 
-unsigned int cubeTexture, planeTexture;
+Cube *cube;
+Plane *plane;
+Shader *cubeShader, *planeShader;
+Texture *cubeTexture, *planeTexture;
+
 void loopFunc();
 
 
@@ -39,13 +44,15 @@ int main()
         return -1;
     }
 
-    cube = new Cube("depth_test_vertex.glsl", "depth_test_frag.glsl");
-    cube->setupVertices();
-    cubeTexture = cube->loadMipMap(FileSystem::getPath("resources/textures/marble.jpg").c_str(), "texture1", Cube::DIFFUSE);
+    cubeShader = new Shader("depth_test_vertex.glsl", "depth_test_frag.glsl");
+    cube = new Cube();
+    cubeTexture = new Texture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
+    cubeTexture->setupTextureUnit(cubeShader, "texture1", Texture::DIFFUSE);
 
-    plane = new Plane("depth_test_vertex.glsl", "depth_test_frag.glsl");
-    plane->setupVertices();
-    planeTexture = plane->loadMipMap(FileSystem::getPath("resources/textures/metal.png").c_str(), "texture1", Plane::DIFFUSE);
+    planeShader = new Shader("depth_test_vertex.glsl", "depth_test_frag.glsl");
+    plane = new Plane();
+    planeTexture = new Texture(FileSystem::getPath("resources/textures/metal.png").c_str());
+    planeTexture->setupTextureUnit(planeShader, "texture1", Texture::DIFFUSE);
 
     mainLoop(loopFunc);
     
@@ -71,14 +78,14 @@ void loopFunc()
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cube->bindTexture(GL_TEXTURE0, cubeTexture);
-    cube->draw(fixDepthFighting(model, glm::vec3(0.0001f)), view, projection);
+    cubeTexture->bind(GL_TEXTURE0);
+    cube->draw(cubeShader, fixDepthFighting(model, glm::vec3(0.0001f)), view, projection);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cube->draw(fixDepthFighting(model, glm::vec3(0.0001f)), view, projection);
+    cube->draw(cubeShader, fixDepthFighting(model, glm::vec3(0.0001f)), view, projection);
     
     model = glm::mat4(1.0f);
-    plane->bindTexture(GL_TEXTURE0, planeTexture);
-    plane->draw(model, view, projection);
+    planeTexture->bind(GL_TEXTURE0);
+    plane->draw(planeShader, model, view, projection);
 }
