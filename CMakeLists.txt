@@ -237,6 +237,7 @@ set(COLLECTIONS
     collections/4.11.1.anti_aliasing_msaa
     collections/4.11.2.anti_aliasing_offscreen
     collections/4.11.3.anti_aliasing_fb_exercise1
+    collections/5.3.1.dir_shadow
 )
 
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
