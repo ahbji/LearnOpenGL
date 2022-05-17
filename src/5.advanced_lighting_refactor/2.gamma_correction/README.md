@@ -49,7 +49,7 @@ vec4 gammaCorrection(vec4 color)
 
 对纹理进行重校，使其回归线性色域空间可以解决这一问题。
 
-OpenGL有两种对纹理进行重校：
+OpenGL有两种方法对纹理进行重校：
 1. 在着色器代码中对纹理进行纹理重校
 
 ```glsl
@@ -76,7 +76,7 @@ vec3 CalcPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir)
 }
 ```
 
-为每个纹理素材都做此操作很麻烦，好在 OpenGL 为生成纹理的 glTexImage2D 函数提供了 GL_SRGB 和 GL_SRGB_ALPHA 两种选项，可以将纹理设置为 sRGB 色域空间，以便在生成纹理时自动将纹理转换为线性色域空间。
+2. 为每个纹理素材都做此操作很麻烦，好在 OpenGL 为生成纹理的 glTexImage2D 函数提供了 GL_SRGB 和 GL_SRGB_ALPHA 两种选项，可以将纹理设置为 sRGB 色域空间，以便在生成纹理时自动将纹理转换为线性色域空间。
 
 ```c++
 unsigned int loadMipMap(const char* texturePath, const std::string& sampler2DName ,unsigned int textureUnitID, bool gammaCorrection)

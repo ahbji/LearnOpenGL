@@ -55,7 +55,7 @@ vec4 gammaCorrection(vec4 color)
 
 vec3 CalcPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir)
 {
-    vec3 lightDir = normalize(light.position - FragPos); // 光线向量
+    vec3 lightDir = normalize(light.position - fragPos); // 光线向量
 
     // 漫反射因子 
     float diff = max(dot(norm, lightDir), 0.0);
@@ -65,7 +65,7 @@ vec3 CalcPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir)
     float spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess * 2); // 镜面反射因子，范围：0-1
     
     // 衰减率
-    float distance = length(light.position - FragPos);
+    float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
     vec3 color = texture(material.diffuse, TexCoords).rgb;

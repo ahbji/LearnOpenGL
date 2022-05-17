@@ -2,9 +2,8 @@
 out vec4 FragColor;
 
 struct Material {
-    vec3 ambient;   // 环境光
-    vec3 diffuse;   // 漫反射率
-    vec3 specular;  // 镜面反射率
+    sampler2D diffuse;   // 漫反射率
+    sampler2D specular;  // 镜面反射率
     float shininess; // 光泽度
 };
 
@@ -20,9 +19,10 @@ struct PointLight {
     float quadratic;
 };
 
-in vec3 Normal;  
-in vec3 FragPos;  
-  
+in vec3 Normal;
+in vec3 FragPos;
+in vec2 TexCoords;
+
 uniform Material material;
 
 #define NR_POINT_LIGHTS 1
@@ -55,7 +55,7 @@ vec4 gammaCorrection(vec4 color)
 
 vec3 CalcPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir)
 {
-    vec3 lightDir = normalize(light.position - FragPos); // 光线向量
+    vec3 lightDir = normalize(light.position - fragPos); // 光线向量
 
     // 漫反射因子 
     float diff = max(dot(norm, lightDir), 0.0);
@@ -65,12 +65,12 @@ vec3 CalcPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir)
     float spec = pow(max(dot(norm, halfwayDir), 0.0), material.shininess * 2); // 镜面反射因子，范围：0-1
     
     // 衰减率
-    float distance = length(light.position - FragPos);
+    float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
-    vec3 ambient = light.ambient * material.ambient;     // 环境光分量
-    vec3 diffuse = light.diffuse * diff * material.diffuse; // 漫反射分量
-    vec3 specular = light.specular * spec * material.specular; // 镜面反射分量
+    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;     // 环境光分量
+    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb; // 漫反射分量
+    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb; // 镜面反射分量
 
     ambient *= attenuation;
     diffuse *= attenuation;

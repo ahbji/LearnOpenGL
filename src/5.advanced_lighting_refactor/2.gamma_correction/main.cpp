@@ -1,21 +1,20 @@
 #include <game_window.h>
 #include <cube.h>
 #include <plane.h>
-
-#include <lighting.h>
 #include <texture.h>
+#include <lighting.h>
+#include <learnOpengl/shader.h>
 
 #include <learnopengl/filesystem.h>
 
 using namespace learnGL;
 
-Cube * materialCube;
-Cube * lightSrcCube;
-Plane * plane;
+Shader *materialCubeShader, *lightSrcCubeShader, *planeShader;
 
-Shader* materialCubeShader, *lightSrcCubeShader, *planeShader;
+Cube *materialCube, *lightSrcCube;
+Plane *plane;
 
-Texture* diffuseMap;
+Texture *materialCubeDiffuseMap, *materialCubeSpecularMap, *planeDiffuseMap;
 
 const float lightSrcSensitivity = SENSITIVITY * 4;
 
@@ -34,11 +33,13 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
+#define DEFAULT_POINT_LIGHT_ID 0
+
 // 光源位置
-glm::vec3 lightPos(0.0f, -2.5f, 0.0f);
+glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
 
 // 光源颜色
-glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+glm::vec3 lightColor(1.0f);
 
 int main()
 {
@@ -50,11 +51,15 @@ int main()
 
     materialCubeShader = new Shader("material_cube_vertex.glsl", "material_cube_frag.glsl");
     materialCube = new Cube();
+    materialCubeDiffuseMap = new Texture(FileSystem::getPath("resources/textures/container2.png").c_str());
+    materialCubeDiffuseMap->setupTextureUnit(materialCubeShader, "material.diffuse", Texture::DIFFUSE);
+    materialCubeSpecularMap = new Texture(FileSystem::getPath("resources/textures/container2_specular.png").c_str());
+    materialCubeSpecularMap->setupTextureUnit(materialCubeShader, "material.specular", Texture::SPECULAR);
 
     planeShader = new Shader("plane_vertex.glsl", "plane_frag.glsl");
     plane = new Plane();
-    diffuseMap = new Texture(FileSystem::getPath("resources/textures/wood.png").c_str());
-    diffuseMap->setupTextureUnit(planeShader, "material.diffuseMap", Texture::DIFFUSE);
+    planeDiffuseMap = new Texture(FileSystem::getPath("resources/textures/wood.png").c_str());
+    planeDiffuseMap->setupTextureUnit(planeShader, "material.diffuseMap", Texture::DIFFUSE);
 
     lightSrcCube = new Cube();
     lightSrcCubeShader = new Shader("light_src_cube_vertex.glsl", "light_src_cube_frag.glsl");
@@ -65,7 +70,9 @@ int main()
     delete materialCube;
     delete planeShader;
     delete plane;
-    delete diffuseMap;
+    delete planeDiffuseMap;
+    delete materialCubeDiffuseMap;
+    delete materialCubeSpecularMap;
     delete lightSrcCube;
     delete lightSrcCubeShader;
 
@@ -73,7 +80,9 @@ int main()
     materialCube = nullptr;
     planeShader = nullptr;
     plane = nullptr;
-    diffuseMap = nullptr;
+    planeDiffuseMap = nullptr;
+    materialCubeDiffuseMap = nullptr;
+    materialCubeSpecularMap = nullptr;
     lightSrcCube = nullptr;
     lightSrcCubeShader = nullptr;
 }
@@ -97,7 +106,7 @@ void planeScene()
         quadratic
     );
 
-    diffuseMap->bind(GL_TEXTURE0);
+    planeDiffuseMap->bind(GL_TEXTURE0);
 
     planeShader->use();
     pointLight->apply(planeShader, 0, lightPos);
@@ -123,10 +132,15 @@ void planeScene()
 
 void cubeScene()
 {
+    // bind mipmap textures
+    materialCubeDiffuseMap->bind(GL_TEXTURE0);
+    materialCubeSpecularMap->bind(GL_TEXTURE1);
+
     // 基础光照属性
     glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
     glm::vec3 specularColor = lightColor;
+
     float constant = 1.0f;
     float linear = 0.09f;
     float quadratic = 0.032f;
@@ -140,17 +154,12 @@ void cubeScene()
         quadratic
     );
 
-    // 材质属性
-    glm::vec3 materialAmbient = glm::vec3(0.24725f, 0.1995f, 0.0745f);
-    glm::vec3 materialDiffuse = glm::vec3(0.75164f, 0.60648f, 0.22648f);
-    glm::vec3 materialSpecular = glm::vec3(0.628281f, 0.555802f, 0.366065f);
-    Material* material = new Material(materialAmbient, materialDiffuse, materialSpecular, 0.4f * 128.0f);
 
-    materialCubeShader->use();
+    Material *material = new Material(0.4f * 128.0f);
     // 应用光照
     pointLight->apply(materialCubeShader, 0, lightPos);
     // 应用材质
-    material->applyMaterial(materialCubeShader);
+    material->applyLightingMapMaterial(materialCubeShader);
 
     // 清理
     delete pointLight;
