@@ -148,12 +148,16 @@ int main()
     // 解绑 depthMapFBO
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 // ----------------------------------------------------------------------------------------------
-
     // shader configuration
     // --------------------
     sceneShader.use();
+    sceneShader.setInt("shadowMap", 5);      // 设置阴影贴图的纹理单元
+    // 绑定阴影贴图
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
+
     sceneShader.setInt("diffuseTexture", 0); // 设置光照贴图的纹理单元
-    sceneShader.setInt("shadowMap", 1);      // 设置阴影贴图的纹理单元
+
 
     // 在平行光方向上假定一个光源位置
     // -------------
@@ -201,36 +205,35 @@ int main()
         lightSpaceMatrix = lightProjection * lightView;
         // 渲染阴影贴图
         shadowMapShader.use();
-        shadowMapShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        shadowMapShader.setMat4("projection", lightProjection);
+        shadowMapShader.setMat4("view", lightView);
         renderScene(shadowMapShader); // shadowMapShader 将场景的深度值写入深度缓冲，从而构建阴影贴图。
 
         // 解绑 depthMapFBO
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 // ----------------------------------------------------------------------------------------------
 
+        sceneShader.use();
+        // 在着色器中用来将世界空间坐标系的顶点位置转换到光空间坐标系，以判断是否渲染阴影
+        sceneShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
         // 2. 结合阴影贴图渲染场景
         // 重置 viewport
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        sceneShader.use();
+        // 渲染场景
+        // 绑定光照贴图
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        // 光照属性
+        sceneShader.setVec3("viewPos", camera.Position);
+        sceneShader.setVec3("lightPos", lightPos);
+        // MVP
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         sceneShader.setMat4("projection", projection);
         sceneShader.setMat4("view", view);
-
-        sceneShader.setVec3("viewPos", camera.Position);
-        sceneShader.setVec3("lightPos", lightPos);
-
-        // 在着色器中用来将世界空间坐标系的顶点位置转换到光空间坐标系，以判断是否渲染阴影
-        sceneShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-        // 绑定光照贴图
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, woodTexture);
-        // 绑定阴影贴图
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-        // 渲染场景
         renderScene(sceneShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
