@@ -2,12 +2,12 @@
 
 #include <vertical_face.h>
 
-TransparentVerticalFace::TransparentVerticalFace()
+VerticalFace::VerticalFace()
 {
     setupVertices();
 }
 
-void TransparentVerticalFace::setupVertices()
+void VerticalFace::setupVertices()
 {
     // 定义标准化设备坐标数据
     // ------------------------------------------------------------------
@@ -45,7 +45,7 @@ void TransparentVerticalFace::setupVertices()
     glBindVertexArray(0);
 }
 
-void TransparentVerticalFace::draw(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection)
+void VerticalFace::draw(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection)
 {
     // activate shader
     shader->use();
@@ -59,7 +59,7 @@ void TransparentVerticalFace::draw(Shader* shader, glm::mat4 model, glm::mat4 vi
     glBindVertexArray(0);
 }
 
-TransparentVerticalFace::~TransparentVerticalFace()
+VerticalFace::~VerticalFace()
 {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

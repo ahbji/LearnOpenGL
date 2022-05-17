@@ -15,8 +15,8 @@ using namespace learnGL;
 
 Cube * cube;
 Plane * plane;
-TransparentVerticalFace * vegetation;
-TransparentVerticalFace * transparentWindow;
+VerticalFace * vegetation;
+VerticalFace * transparentWindow;
 
 Shader *cubeShader, *planeShader, *vegetationShader, *transparentWindowShader;
 Texture *cubeTexture, *planeTexture, *vegetationTexture, *windowTexture;
@@ -70,12 +70,12 @@ int main()
     planeTexture->setupTextureUnit(planeShader, "texture1", Texture::DIFFUSE);
 
     vegetationShader = new Shader("face_culling_vertex.glsl", "face_culling_frag.glsl");
-    vegetation = new TransparentVerticalFace();
+    vegetation = new VerticalFace();
     vegetationTexture = new Texture(FileSystem::getPath("resources/textures/grass.png").c_str(), true, false);
     vegetationTexture->setupTextureUnit(vegetationShader, "texture1", Texture::DIFFUSE);
 
     transparentWindowShader = new Shader("face_culling_vertex.glsl", "face_culling_frag.glsl");
-    transparentWindow = new TransparentVerticalFace();
+    transparentWindow = new VerticalFace();
     windowTexture = new Texture(FileSystem::getPath("resources/textures/window.png").c_str(), true, false);
     windowTexture->setupTextureUnit(transparentWindowShader, "texture1", Texture::DIFFUSE);
 

@@ -13,7 +13,7 @@ using namespace learnGL;
 Cube *cube;
 Plane *plane;
 FrameBuffer *frameBuffer;
-TransparentVerticalFace *vegetation, *transparentWindow;
+VerticalFace *vegetation, *transparentWindow;
 
 Texture *cubeTexture, *planeTexture, *vegetationTexture, *windowTexture;
 
@@ -64,11 +64,11 @@ int main()
     planeTexture = new Texture(FileSystem::getPath("resources/textures/metal.png").c_str());
     planeTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
 
-    vegetation = new TransparentVerticalFace();
+    vegetation = new VerticalFace();
     vegetationTexture = new Texture(FileSystem::getPath("resources/textures/grass.png").c_str(), true, false);
     vegetationTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
 
-    transparentWindow = new TransparentVerticalFace();
+    transparentWindow = new VerticalFace();
     windowTexture = new Texture(FileSystem::getPath("resources/textures/window.png").c_str(), true, false);
     windowTexture->setupTextureUnit(sceneShader, "texture1", Texture::DIFFUSE);
 

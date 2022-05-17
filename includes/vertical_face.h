@@ -3,10 +3,10 @@
 
 #include <learnopengl/shader.h>
 
-class TransparentVerticalFace
+class VerticalFace
 {
 public:
-    TransparentVerticalFace();
+    VerticalFace();
 
     /**
      * @brief 绘制透明立面
@@ -18,7 +18,7 @@ public:
      */
     void draw(Shader* shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection);
 
-    ~TransparentVerticalFace();
+    ~VerticalFace();
 private:
     unsigned int VBO, VAO;
     void setupVertices();
