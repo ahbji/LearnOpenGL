@@ -165,6 +165,7 @@ set(5.advanced_lighting_refactor
     3.1.dir_shadow
     3.2.point_shadow
     3.3.csm
+    4.normal_mapping
 )
 
 set(6.pbr
